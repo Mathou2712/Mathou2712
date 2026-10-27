@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import logoImg from '../public/oktoberfest-logo.png';
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import {
   Info, Search, ChevronDown, ChevronRight, ArrowLeft, ArrowDownAZ, ArrowDownZA, ArrowDown01, ArrowDown10,
@@ -76,11 +77,11 @@ h1,h2,h3{text-wrap:balance}
 
 /* Festival ticket price badge: clear, tactile, and less gimmicky */
 .h-ticket{position:relative;display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 12px;border-radius:999px;
-  background:linear-gradient(180deg,#E8C05C,#D4AF37);color:var(--on-gold);white-space:nowrap;box-shadow:inset 0 0 0 1px rgba(10,25,47,.12);}
+  background:#005293;color:#fff;white-space:nowrap;box-shadow:inset 0 0 0 1px rgba(10,25,47,.12);}
 .h-ticket::after{display:none;}
-.h-ticket-best{background:var(--ink);color:var(--gold);box-shadow:inset 0 0 0 1px rgba(212,175,55,.22);}
-.h-ticket-label{font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:700;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;opacity:.8;}
-.h-ticket-price{font-weight:700;font-size:15px;font-variant-numeric:tabular-nums;}
+.h-ticket-best{background:linear-gradient(180deg,#E5A93C,#D4AF37);color:var(--blue-ink);box-shadow:inset 0 0 0 1px rgba(10,25,47,.12);}
+.h-ticket-label{font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:700;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;opacity:.8;color:inherit;}
+.h-ticket-price{font-weight:700;font-size:15px;font-variant-numeric:tabular-nums;color:inherit;}
 
 .h-chips{scrollbar-width:none;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 22px),transparent);}
 .h-chips::-webkit-scrollbar{display:none}
@@ -182,26 +183,28 @@ function priceList(productId, min, max) {
 
 // [id, name, category, sub-category, min €, max €, search aliases]
 const PRODUCTS = [
-  ["mass", "Wiesn Maß (Festbier, 1 L)", "drinks", "alcoholic", 14.5, 15.8, ["beer", "mass", "masskrug", "festbier", "helles"]],
-  ["af-weissbier", "Alcohol-Free Weissbier", "drinks", "non-alcoholic", 9.2, 11, ["beer", "weissbeer", "weißbier", "non-alcoholic"]],
-  ["apfelschorle", "Apfelschorle (1 L)", "drinks", "non-alcoholic", 9.2, 11, ["apple", "spritzer", "juice", "schorle"]],
-  ["radler", "Radler Maß (1 L)", "drinks", "alcoholic", 14.5, 15.8, ["beer", "shandy", "lemonade"]],
-  ["weisswein", "Weißwein (0.2 L)", "drinks", "alcoholic", 9.5, 13.9, ["white wine", "wine", "weisswein"]],
-  ["rotwein", "Rotwein (0.2 L)", "drinks", "alcoholic", 9.5, 13.9, ["red wine", "wine"]],
-  ["schnaps", "Schnaps (2 cl)", "drinks", "alcoholic", 5.5, 8.5, ["shot", "obstler", "enzian"]],
-  ["coffee", "Coffee", "drinks", "non-alcoholic", 4.2, 5.8, ["kaffee"]],
-  ["hot-chocolate", "Hot Chocolate", "drinks", "non-alcoholic", 4.9, 6.5, ["kakao", "chocolate"]],
+  ["mass", "Paulaner Helles Maß (1 L)", "drinks", "alcoholic", 14.5, 15.8, ["paulaner", "helles", "mass", "festbier", "beer"], "1 L"],
+  ["augustiner-helles", "Augustiner Helles (0.5 L)", "drinks", "alcoholic", 12.9, 14.8, ["augustiner", "helles", "beer", "lager"], "0.5 L"],
+  ["weissbier", "Weißbier (0.5 L)", "drinks", "alcoholic", 11.5, 14.2, ["weissbier", "bier", "wheat beer", "white beer"], "0.5 L"],
+  ["radler", "Radler (0.5 L)", "drinks", "alcoholic", 10.8, 13.5, ["radler", "shandy", "lemonbeer", "beer"], "0.5 L"],
+  ["af-weissbier", "Alcohol-Free Weißbier (0.5 L)", "drinks", "non-alcoholic", 9.2, 11, ["beer", "weissbeer", "weißbier", "non-alcoholic"], "0.5 L"],
+  ["apfelschorle", "Apfelschorle (1 L)", "drinks", "non-alcoholic", 9.2, 11, ["apple", "spritzer", "juice", "schorle"], "1 L"],
+  ["schnaps", "Schnaps (2 cl)", "drinks", "alcoholic", 5.5, 8.5, ["shot", "obstler", "enzian"], "2 cl"],
+  ["coffee", "Coffee", "drinks", "non-alcoholic", 4.2, 5.8, ["kaffee"], "1 cup"],
+  ["hot-chocolate", "Hot Chocolate", "drinks", "non-alcoholic", 4.9, 6.5, ["kakao", "chocolate"], "1 cup"],
 
-  ["hendl", "Hendl (½ grilled chicken)", "foods", "non-vegetarian", 16.5, 21.5, ["chicken", "roast chicken", "hendl"]],
-  ["bratwurst", "Bratwurst with sauerkraut", "foods", "non-vegetarian", 10.5, 14.5, ["sausage", "wurst"]],
-  ["leberkaese", "Leberkäse with potato salad", "foods", "non-vegetarian", 11.9, 15.5, ["meatloaf", "leberkase"]],
-  ["brezn", "Brezn (giant pretzel)", "foods", "vegetarian", 6.5, 8.5, ["pretzel", "breze", "bread"]],
-  ["obatzda", "Obatzda with Brezn", "foods", "vegetarian", 12.9, 16.9, ["cheese", "spread"]],
-  ["kaesespaetzle", "Käsespätzle", "foods", "vegetarian", 15.5, 19.5, ["cheese", "noodles", "kasespatzle"]],
-  ["kaiserschmarrn", "Kaiserschmarrn", "foods", "vegetarian", 14.5, 18.9, ["dessert", "pancake", "sweet"]],
-  ["apfelstrudel", "Apfelstrudel with vanilla sauce", "foods", "vegetarian", 9.2, 12.5, ["apple", "dessert", "strudel"]],
-].map(([id, name, category, sub, min, max, aliases]) => ({
-  id, name, category, sub, aliases,
+  ["hendl", "Hendl (½ grilled chicken)", "foods", "non-vegetarian", 16.5, 21.5, ["chicken", "roast chicken", "hendl"], "1 serving"],
+  ["schweinhaxe", "Schäufele / Schweinshaxe (pork knuckle)", "foods", "non-vegetarian", 18.5, 24.5, ["pork", "knuckle", "schweinhaxe", "schäufele"], "1 serving"],
+  ["bratwurst", "Bratwurst with sauerkraut", "foods", "non-vegetarian", 10.5, 14.5, ["sausage", "wurst"], "1 serving"],
+  ["leberkaese", "Leberkäse with potato salad", "foods", "non-vegetarian", 11.9, 15.5, ["meatloaf", "leberkase"], "1 serving"],
+  ["brezn", "Brezn (giant pretzel)", "foods", "vegetarian", 6.5, 8.5, ["pretzel", "breze", "bread"], "1 pretzel"],
+  ["obatzda", "Obatzda with Brezn", "foods", "vegetarian", 12.9, 16.9, ["cheese", "spread"], "1 platter"],
+  ["kaesespaetzle", "Käsespätzle", "foods", "vegetarian", 15.5, 19.5, ["cheese", "noodles", "kasespatzle"], "1 portion"],
+  ["kaiserschmarrn", "Kaiserschmarrn", "foods", "vegetarian", 14.5, 18.9, ["dessert", "pancake", "sweet"], "1 portion"],
+  ["apfelstrudel", "Apfelstrudel with vanilla sauce", "foods", "vegetarian", 9.2, 12.5, ["apple", "dessert", "strudel"], "1 portion"],
+  ["vegan-curry", "Vegan Curry with bread", "foods", "vegetarian", 13.5, 17.5, ["vegan", "curry", "plant based"], "1 portion"],
+].map(([id, name, category, sub, min, max, aliases, quantity]) => ({
+  id, name, category, sub, aliases, quantity,
   prices: priceList(id, min, max),
 }));
 
@@ -241,6 +244,18 @@ const PAGE_SIZE = 8;
 const fromPrice = (product) => Math.min(...product.prices.map((p) => p.price));
 const formatPrice = (v) => `€${Number.isInteger(v) ? v : v.toFixed(2)}`;
 const formatInput = (v) => (Number.isInteger(v) ? String(v) : v.toFixed(2));
+const hasRenderablePrice = (value) => {
+  if (typeof value === "number") return Number.isFinite(value);
+  if (typeof value === "string") {
+    const text = value.trim();
+    if (!text || text === "null" || text === "undefined") return false;
+    if (/^\[.*\]$/.test(text)) return false;
+    const lower = text.toLowerCase();
+    if (lower.includes("no price") || lower.includes("prices vary")) return false;
+    return !Number.isNaN(Number.parseFloat(text.replace(",", ".")));
+  }
+  return false;
+};
 
 function itemsFor(categoryId, subId) {
   const pool = CATEGORY_BY_ID[categoryId].kind === "products" ? PRODUCTS : PLACES;
@@ -274,19 +289,35 @@ function PretzelMark({ size = 56, className = "" }) {
   );
 }
 
-function MugMark({ size = 72 }) {
+function MugMark({ size = 72, className = "" }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" aria-hidden="true">
-      <path d="M44 27h5a7 7 0 0 1 7 7v6a7 7 0 0 1-7 7h-5" stroke="var(--ink)" strokeWidth="3.5" strokeLinecap="round" />
-      <path d="M13 22h31v32a4 4 0 0 1-4 4H17a4 4 0 0 1-4-4V22Z" fill="var(--gold)" stroke="var(--ink)" strokeWidth="3.5" strokeLinejoin="round" />
-      <path d="M21 31v18M28.5 31v18M36 31v18" stroke="var(--ink)" strokeOpacity=".35" strokeWidth="3" strokeLinecap="round" />
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" aria-hidden="true" className={className}>
+      <path d="M44 27h5a7 7 0 0 1 7 7v6a7 7 0 0 1-7 7h-5" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" />
+      <path d="M13 22h31v32a4 4 0 0 1-4 4H17a4 4 0 0 1-4-4V22Z" fill="var(--gold)" stroke="currentColor" strokeWidth="3.5" strokeLinejoin="round" />
+      <path d="M21 31v18M28.5 31v18M36 31v18" stroke="currentColor" strokeOpacity=".35" strokeWidth="3" strokeLinecap="round" />
       <path
         d="M11 23c-2-5 2-10 7-9 1-5 8-7 12-3 3-3 10-2 11 3 5-1 8 4 6 9H11Z"
         fill="var(--surface)"
-        stroke="var(--ink)"
+        stroke="currentColor"
         strokeWidth="3.5"
         strokeLinejoin="round"
       />
+    </svg>
+  );
+}
+
+function RibbonLogo({ className = "" }) {
+  return (
+    <svg className={className} viewBox="0 0 240 160" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M 20 120 C 0 100, 10 75, 40 85 C 90 100, 160 110, 210 65 C 225 50, 215 35, 190 55 C 160 80, 100 85, 45 60" stroke="url(#oktoberfestGold)" strokeWidth="6" strokeLinecap="round" fill="none" />
+      <path d="M 95 30 C 150 15, 185 45, 175 90 C 165 130, 100 145, 60 120 C 35 105, 45 60, 80 35 C 110 15, 160 30, 170 70 C 180 110, 130 135, 75 125" fill="url(#oktoberfestGold)" />
+      <defs>
+        <linearGradient id="oktoberfestGold" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FFC700" />
+          <stop offset="50%" stopColor="#E69A00" />
+          <stop offset="100%" stopColor="#B36B00" />
+        </linearGradient>
+      </defs>
     </svg>
   );
 }
@@ -300,34 +331,33 @@ const HeaderLineContext = createContext(() => {});
 
 function Header({ onHome, onInfo, hairline }) {
   return (
-    <header className={`h-glass absolute inset-x-0 top-0 z-30 transition-shadow ${hairline ? "h-hairline" : ""}`}>
-      <div className="h-rauten h-1" aria-hidden="true" />
+    <header className={`absolute inset-x-0 top-0 z-30 bg-[#0A234D] text-[#F9F4E5] shadow-[0_8px_18px_rgba(10,25,47,0.18)] transition-shadow ${hairline ? "shadow-[0_8px_18px_rgba(10,25,47,0.18),0_1px_0_rgba(255,255,255,0.16)]" : ""}`}>
+      <div className="h-rauten h-1.5" aria-hidden="true" />
       <div className="h-gutter" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
-        <div className="mx-auto flex h-14 max-w-[560px] items-center justify-between">
+        <div className="mx-auto flex h-[74px] max-w-[560px] items-center justify-between">
           <button
             type="button"
             onClick={onHome}
             aria-label="Hermes, go to start"
-            className="flex items-center gap-2.5 rounded-lg transition-transform active:scale-95"
+            className="flex items-center gap-3 rounded-lg transition-transform active:scale-95"
           >
-            <span aria-hidden="true" className="grid h-9 w-9 place-items-center rounded-[11px] bg-[var(--gold)] text-[var(--ink)] shadow-[inset_0_0_0_1px_rgba(10,25,47,0.08)]">
-              <Beer size={18} strokeWidth={2.2} />
-            </span>
-            <span className="flex flex-col items-start leading-none">
-              <span className="f-gothic text-[22px] leading-none text-[var(--blue-ink)]">Hermes</span>
-              <span className="f-eyebrow -mt-0.5 text-[9px] tracking-[0.12em] text-[var(--muted)]">WIESN PRICE GUIDE</span>
-            </span>
+            <img src={logoImg} alt="Hermes Logo" className="mr-3 h-10 w-auto object-contain drop-shadow" />
+            <div className="flex flex-col items-start leading-none">
+              <span className="f-display text-[26px] font-extrabold uppercase tracking-[.04em] text-[#F9F4E5]">HERMES</span>
+              <span className="f-eyebrow mt-1 text-[9px] tracking-[0.22em] text-[#F5D880]">OKTOBERFEST PRICES</span>
+            </div>
           </button>
           <button
             type="button"
             onClick={onInfo}
             aria-label="About Hermes"
-            className="grid h-10 w-10 place-items-center rounded-full text-[var(--ink)] transition-[background-color,transform] hover:bg-[var(--press)] active:scale-90"
+            className="grid h-10 w-10 place-items-center rounded-full border border-[rgba(245,216,128,0.35)] bg-[rgba(255,255,255,0.06)] text-[#F8F0DE] transition-[background-color,transform] hover:bg-[rgba(255,255,255,0.12)] active:scale-90"
           >
-            <Info size={21} strokeWidth={1.9} />
+            <Info size={20} strokeWidth={2} />
           </button>
         </div>
       </div>
+      <div className="h-rauten h-2" aria-hidden="true" />
     </header>
   );
 }
@@ -358,7 +388,9 @@ const ScrollArea = React.forwardRef(function ScrollArea({ label, pinned, childre
           style={{ top: "var(--hh)" }}
         >
           <div className="h-gutter">
-            <div className="mx-auto max-w-[560px] pb-3 pt-1">{pinned}</div>
+            <div className="mx-auto max-w-[560px] pb-0 pt-0">
+              <div className="pt-8">{pinned}</div>
+            </div>
           </div>
         </div>
       )}
@@ -381,8 +413,11 @@ function CategoryIcon({ category, size = "md" }) {
 
 function PriceTicket({ price, label, best }) {
   return (
-    <span className={`h-ticket ${best ? "h-ticket-best" : ""}`}>
-      {label && <span className="h-ticket-label">{label}</span>}
+    <span
+      className={`h-ticket border ${best ? "h-ticket-best border-[rgba(212,175,55,0.65)] shadow-[0_0_0_2px_rgba(212,175,55,0.18),0_6px_16px_rgba(13,44,91,0.12)]" : "bg-[#005293] text-white border-[rgba(10,25,47,0.08)]"}`}
+      aria-label={best ? `Best price ${formatPrice(price)}` : undefined}
+    >
+      {label && label !== "Best" && <span className="h-ticket-label">{label}</span>}
       <span className="h-ticket-price">{formatPrice(price)}</span>
     </span>
   );
@@ -517,7 +552,8 @@ function Dropdown({ id, label, value, options, onChange, searchPlaceholder }) {
   );
 }
 
-function LinkRow({ name, price, onClick }) {
+function LinkRow({ name, price, onClick, showPrice = true }) {
+  const priceIsRenderable = showPrice && hasRenderablePrice(price);
   return (
     <motion.li layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
       <button
@@ -526,14 +562,15 @@ function LinkRow({ name, price, onClick }) {
         className="flex min-h-[58px] w-full items-center gap-3 px-4 py-2.5 text-left transition-colors active:bg-[var(--press)]"
       >
         <span className="f-display min-w-0 flex-1 text-[19px] font-semibold leading-tight">{name}</span>
-        <PriceTicket price={price} label="from" />
+        {priceIsRenderable ? <PriceTicket price={price} label="from" /> : null}
         <ChevronRight size={18} strokeWidth={2.5} aria-hidden="true" className="-mr-1 shrink-0 text-[var(--muted)]" />
       </button>
     </motion.li>
   );
 }
 
-function ExpandRow({ id, name, price, showFrom, best, type, location, expanded, onToggle }) {
+function ExpandRow({ id, name, price, showFrom, best, type, location, expanded, onToggle, showPrice = true }) {
+  const priceIsRenderable = showPrice && hasRenderablePrice(price);
   return (
     <motion.li
       layout
@@ -541,19 +578,24 @@ function ExpandRow({ id, name, price, showFrom, best, type, location, expanded, 
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       data-row={id}
-      className={`transition-colors ${expanded ? "bg-[var(--blue-soft)]" : ""}`}
+      className={`overflow-hidden bg-white transition-colors ${best ? "rounded-t-2xl border-2 border-[#D4AF37]" : "rounded-t-2xl ring-1 ring-inset ring-[var(--hair)]"}`}
     >
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={expanded}
         aria-controls={`${id}-details`}
-        className="flex min-h-[58px] w-full items-center gap-3 px-4 py-2.5 text-left transition-colors active:bg-[var(--press)]"
+        className="flex min-h-[58px] w-full items-center gap-3 bg-white px-4 py-2.5 text-left transition-colors active:bg-[var(--press)]"
       >
         <span className={`f-display min-w-0 flex-1 text-[19px] font-semibold leading-tight ${expanded ? "text-[var(--blue-ink)]" : ""}`}>
           {name}
         </span>
-        <PriceTicket price={price} label={best ? "Best" : showFrom ? "from" : null} best={best} />
+        {priceIsRenderable ? (
+          <div className="flex items-center gap-2">
+            <PriceTicket price={price} label={showFrom ? "from" : null} best={best} />
+            {best && <span className="rounded-full bg-[#D4AF37] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#005293]">BEST PRICE</span>}
+          </div>
+        ) : null}
         <motion.span animate={{ rotate: expanded ? 180 : 0 }} className="-mr-1 shrink-0 text-[var(--muted)]">
           <ChevronDown size={18} strokeWidth={2.5} aria-hidden="true" />
         </motion.span>
@@ -566,12 +608,13 @@ function ExpandRow({ id, name, price, showFrom, best, type, location, expanded, 
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
+            className="border-t border-[var(--hair)] bg-[#F0F7FF] px-4 pb-4 pt-3"
           >
-            <dl className="grid grid-cols-[auto_1fr] items-center gap-x-2.5 gap-y-1.5 px-4 pb-4 text-[15px]">
+            <dl className="grid grid-cols-[auto_1fr] items-center gap-x-2.5 gap-y-1.5 text-[15px] text-[var(--ink)]">
               <Store size={15} aria-hidden="true" className="text-[var(--blue-ink)]" />
               <div><dt className="sr-only">Type</dt><dd>{type}</dd></div>
               <MapPin size={15} aria-hidden="true" className="text-[var(--blue-ink)]" />
-              <div><dt className="sr-only">Location</dt><dd className="font-semibold">{location}</dd></div>
+              <div><dt className="sr-only">Location</dt><dd className="font-semibold text-[var(--ink)]">{location}</dd></div>
             </dl>
           </motion.div>
         )}
@@ -678,12 +721,12 @@ function BudgetPopup({ open, max, value, onClose, onApply }) {
               <span>€0</span>
               {/* The ticket's notch mask would clip an outline, so the focus ring sits on this wrapper */}
               <span
-                className={`rounded-lg p-[3px] transition-shadow ${
-                  outOfRange ? "shadow-[0_0_0_2px_var(--danger)]" : "focus-within:shadow-[0_0_0_2px_var(--blue)]"
+                className={`rounded-full p-[1px] transition-shadow ${
+                  outOfRange ? "shadow-[0_0_0_2px_var(--danger)]" : "focus-within:shadow-[0_0_0_2px_rgba(0,82,147,0.18)]"
                 }`}
               >
-              <label className="h-ticket h-11 cursor-text gap-1 px-4">
-                <span aria-hidden="true" className="text-lg font-bold">€</span>
+              <label className="flex cursor-text items-center rounded-full border border-slate-300 bg-white px-4 py-2 text-[#005293] transition-colors focus-within:border-[#005293] focus-within:ring-2 focus-within:ring-[#005293]/20 focus-within:outline-none">
+                <span aria-hidden="true" className="mr-1 text-lg font-semibold text-[#005293]">€</span>
                 <input
                   id="budget-input"
                   type="text"
@@ -695,7 +738,7 @@ function BudgetPopup({ open, max, value, onClose, onApply }) {
                   value={text}
                   onChange={(e) => onType(e.target.value)}
                   onBlur={() => setText(formatInput(draft))}
-                  className="tabular w-16 min-w-0 bg-transparent text-center text-xl font-bold text-[var(--on-gold)] focus:outline-none"
+                  className="tabular w-16 min-w-0 border-0 bg-transparent text-center text-lg font-semibold text-[#005293] placeholder:text-slate-400 focus:outline-none"
                 />
               </label>
               </span>
@@ -808,7 +851,7 @@ function HomeScreen({ onOpenCategory, onOpenItem }) {
                           <span className="f-display block truncate text-[18px] font-semibold leading-tight">{m.name}</span>
                           <span className="block text-[13px] text-[var(--muted)]">{CATEGORY_BY_ID[m.category].label}</span>
                         </span>
-                        <PriceTicket price={m.from} label="from" />
+                        {m.category !== "merch" && hasRenderablePrice(m.from) ? <PriceTicket price={m.from} label="from" /> : null}
                       </button>
                     </li>
                   ))}
@@ -902,12 +945,12 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
   const priceCeiling = Math.max(20, Math.ceil(Math.max(...rows.map((r) => r.price)) / 5) * 5);
 
   const visible = useMemo(() => {
-    const list = rows.filter((r) => maxPrice === null || r.price <= maxPrice);
+    const list = rows.filter((r) => categoryId === "merch" || maxPrice === null || r.price <= maxPrice);
     const byPrice = (a, b) => a.price - b.price || a.name.localeCompare(b.name);
     const byName = (a, b) => a.name.localeCompare(b.name);
     list.sort(product ? byPrice : byName);
     return sortDesc ? list.reverse() : list;
-  }, [rows, maxPrice, sortDesc, product]);
+  }, [rows, maxPrice, sortDesc, product, categoryId]);
 
   const bestPrice = product && visible.length ? Math.min(...visible.map((r) => r.price)) : null;
 
@@ -916,11 +959,10 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
   const shown = visible.slice(0, Math.max(limit, focusIndex + 1));
   const remaining = visible.length - shown.length;
 
-  const title = product ? product.name : sub.id === "all" ? `${cat.label} list` : sub.label;
+  const title = product ? product.name : sub.id === "all" ? cat.label : sub.label;
   const countLabel = isVendorView
     ? `${visible.length} ${visible.length === 1 ? "vendor" : "vendors"} found`
     : `${visible.length} ${visible.length === 1 ? "product" : "products"}`;
-
   const SortIcon = product ? (sortDesc ? ArrowDown10 : ArrowDown01) : sortDesc ? ArrowDownZA : ArrowDownAZ;
   const sortLabel = product
     ? sortDesc ? "Sorted by price, highest first" : "Sorted by price, lowest first"
@@ -928,17 +970,19 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
 
   // Sticky controls: one category selector, then sub-category chips with the price button beside them
   const pinned = (
-    <div className="flex flex-col gap-2.5">
-      <Dropdown
-        id="category-dropdown"
-        label="Category"
-        value={categoryId}
-        options={CATEGORIES}
-        searchPlaceholder="Search categories"
-        onChange={(id) => onNavigate({ category: id, sub: "all", item: null })}
-      />
+    <div className="flex flex-col gap-1.5 pt-2">
+      <div className="pt-0">
+        <Dropdown
+          id="category-dropdown"
+          label="Category"
+          value={categoryId}
+          options={CATEGORIES}
+          searchPlaceholder="Search categories"
+          onChange={(id) => onNavigate({ category: id, sub: "all", item: null })}
+        />
+      </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 pt-0">
         <div ref={chipsRef} role="radiogroup" aria-label="Sub-category" className="h-chips -my-1 flex min-w-0 flex-1 gap-1.5 overflow-x-auto py-1 pr-6">
           {cat.subs.map((s) => {
             const active = s.id === sub.id;
@@ -976,7 +1020,7 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
         </button>
       </div>
 
-      <div className="flex items-center gap-1 pt-0.5">
+      <div className="flex items-center gap-1 pt-0">
         <button
           type="button"
           onClick={onBack}
@@ -1010,7 +1054,7 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
       <ScrollArea ref={scrollRef} label={title} pinned={pinned}>
         {visible.length ? (
           <>
-            <ul className="h-group mt-2">
+            <ul className="h-group mt-1">
               <AnimatePresence initial={false} mode="popLayout">
                 {shown.map((r) =>
                   isVendorView ? (
@@ -1025,6 +1069,7 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
                       location={r.location}
                       expanded={expanded === r.id}
                       onToggle={() => setExpanded((cur) => (cur === r.id ? null : r.id))}
+                      showPrice={categoryId !== "merch"}
                     />
                   ) : (
                     <LinkRow
@@ -1032,6 +1077,7 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
                       name={r.name}
                       price={r.price}
                       onClick={() => onNavigate({ category: categoryId, sub: sub.id, item: r.id })}
+                      showPrice={categoryId !== "merch"}
                     />
                   )
                 )}
@@ -1199,7 +1245,7 @@ export default function OktoberfestVendorFinder() {
             onInfo={() => view.screen !== "about" && navigate({ screen: "about", from: view })}
           />
 
-          <main className="flex h-full flex-col">
+          <main className="flex h-full flex-col pt-0">
             <AnimatePresence mode="wait" initial={false} custom={direction}>
               <motion.div
                 key={viewKey}
@@ -1208,7 +1254,7 @@ export default function OktoberfestVendorFinder() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -24 * direction }}
                 transition={{ duration: 0.18, ease: "easeOut" }}
-                className="flex min-h-0 flex-1 flex-col"
+                className="flex min-h-0 flex-1 flex-col pt-1"
               >
                 {view.screen === "home" && (
                   <HomeScreen onOpenCategory={(id) => openList({ category: id })} onOpenItem={openSearchResult} />
