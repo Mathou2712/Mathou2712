@@ -64,6 +64,7 @@ h1,h2,h3{text-wrap:balance}
 .h-gutter{padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));}
 .h-scroll{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
 .h-scroll-pad{padding-bottom:calc(36px + env(safe-area-inset-bottom,0px));}
+.h-scroll-pad-extra{padding-bottom:calc(80px + env(safe-area-inset-bottom,0px));}
 .h-rauten{background-color:#FFFFFF;background-image:${RAUTEN};background-size:12px 20px;}
 
 /* Simple app bars: clean, solid, and practical */
@@ -76,12 +77,12 @@ h1,h2,h3{text-wrap:balance}
 .h-group > li + li::before{content:"";position:absolute;top:0;left:16px;right:0;height:1px;background:var(--hair);z-index:1;}
 
 /* Festival ticket price badge: clear, tactile, and less gimmicky */
-.h-ticket{position:relative;display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 12px;border-radius:999px;
+.h-ticket{position:relative;display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px;border-radius:999px;
   background:#005293;color:#fff;white-space:nowrap;box-shadow:inset 0 0 0 1px rgba(10,25,47,.12);}
 .h-ticket::after{display:none;}
 .h-ticket-best{background:linear-gradient(180deg,#E5A93C,#D4AF37);color:var(--blue-ink);box-shadow:inset 0 0 0 1px rgba(10,25,47,.12);}
-.h-ticket-label{font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:700;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;opacity:.8;color:inherit;}
-.h-ticket-price{font-weight:700;font-size:15px;font-variant-numeric:tabular-nums;color:inherit;}
+.h-ticket-label{font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:700;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;opacity:.8;color:inherit;}
+.h-ticket-price{font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;color:inherit;}
 
 .h-chips{scrollbar-width:none;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 22px),transparent);}
 .h-chips::-webkit-scrollbar{display:none}
@@ -262,10 +263,20 @@ function itemsFor(categoryId, subId) {
   return pool.filter((p) => p.category === categoryId && (subId === "all" || p.sub === subId));
 }
 
+const normalizeSearchText = (value) =>
+  value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
 const SEARCH_INDEX = [
-  ...PRODUCTS.map((p) => ({ ...p, from: fromPrice(p), terms: [p.name, ...p.aliases] })),
-  ...PLACES.map((p) => ({ ...p, terms: [p.name, p.type] })),
-].map((e) => ({ ...e, haystack: e.terms.join(" ").toLowerCase() }));
+  ...PRODUCTS.map((p) => ({
+    ...p,
+    from: fromPrice(p),
+    terms: [p.name, ...p.aliases, CATEGORY_BY_ID[p.category].label],
+  })),
+  ...PLACES.map((p) => ({
+    ...p,
+    terms: [p.name, p.type, CATEGORY_BY_ID[p.category].label],
+  })),
+].map((e) => ({ ...e, haystack: normalizeSearchText(e.terms.join(" ")) }));
 
 /* ------------------------------------------------------------------ */
 /* Illustrations                                                        */
@@ -364,7 +375,7 @@ function Header({ onHome, onInfo, hairline }) {
 
 // The only scrolling element on a screen. It starts under the frosted header;
 // `pinned` content sticks just below the header and the list slides under both.
-const ScrollArea = React.forwardRef(function ScrollArea({ label, pinned, children }, ref) {
+const ScrollArea = React.forwardRef(function ScrollArea({ label, pinned, children, extraBottomPadding = false }, ref) {
   const [scrolled, setScrolled] = useState(false);
   const setHeaderLine = useContext(HeaderLineContext);
 
@@ -395,7 +406,7 @@ const ScrollArea = React.forwardRef(function ScrollArea({ label, pinned, childre
         </div>
       )}
       <div className="h-gutter">
-        <div className="h-scroll-pad mx-auto max-w-[560px]">{children}</div>
+        <div className={`h-scroll-pad${extraBottomPadding ? " h-scroll-pad-extra" : ""} mx-auto max-w-[560px]`}>{children}</div>
       </div>
     </div>
   );
@@ -414,7 +425,7 @@ function CategoryIcon({ category, size = "md" }) {
 function PriceTicket({ price, label, best }) {
   return (
     <span
-      className={`h-ticket border ${best ? "h-ticket-best border-[rgba(212,175,55,0.65)] shadow-[0_0_0_2px_rgba(212,175,55,0.18),0_6px_16px_rgba(13,44,91,0.12)]" : "bg-[#005293] text-white border-[rgba(10,25,47,0.08)]"}`}
+      className={`h-ticket border ${best ? "h-ticket-best border-[rgba(212,175,55,0.65)]" : "bg-[#005293] text-white border-[rgba(10,25,47,0.08)]"}`}
       aria-label={best ? `Best price ${formatPrice(price)}` : undefined}
     >
       {label && label !== "Best" && <span className="h-ticket-label">{label}</span>}
@@ -587,18 +598,20 @@ function ExpandRow({ id, name, price, showFrom, best, type, location, expanded, 
         aria-controls={`${id}-details`}
         className="flex min-h-[58px] w-full items-center gap-3 bg-white px-4 py-2.5 text-left transition-colors active:bg-[var(--press)]"
       >
-        <span className={`f-display min-w-0 flex-1 text-[19px] font-semibold leading-tight ${expanded ? "text-[var(--blue-ink)]" : ""}`}>
+        <span className={`f-display min-w-0 flex-1 break-normal hyphens-manual text-[19px] font-semibold leading-tight text-[var(--ink)] ${expanded ? "text-[var(--blue-ink)]" : ""}`}>
           {name}
         </span>
-        {priceIsRenderable ? (
-          <div className="flex items-center gap-2">
-            <PriceTicket price={price} label={showFrom ? "from" : null} best={best} />
-            {best && <span className="rounded-full bg-[#D4AF37] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#005293]">BEST PRICE</span>}
-          </div>
-        ) : null}
-        <motion.span animate={{ rotate: expanded ? 180 : 0 }} className="-mr-1 shrink-0 text-[var(--muted)]">
-          <ChevronDown size={18} strokeWidth={2.5} aria-hidden="true" />
-        </motion.span>
+        <div className="flex shrink-0 items-center gap-2">
+          {priceIsRenderable ? (
+            <div className="flex flex-col items-end gap-1 sm:flex-row-reverse sm:items-center sm:gap-2">
+              <PriceTicket price={price} label={showFrom ? "from" : null} best={best} />
+              {best && <span className="rounded-full bg-[#D4AF37] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#005293]">BEST PRICE</span>}
+            </div>
+          ) : null}
+          <motion.span animate={{ rotate: expanded ? 180 : 0 }} className="-mr-1 shrink-0 text-[var(--muted)]">
+            <ChevronDown size={18} strokeWidth={2.5} aria-hidden="true" />
+          </motion.span>
+        </div>
       </button>
       <AnimatePresence initial={false}>
         {expanded && (
@@ -780,13 +793,13 @@ function BudgetPopup({ open, max, value, onClose, onApply }) {
 
 function HomeScreen({ onOpenCategory, onOpenItem }) {
   const [query, setQuery] = useState("");
-  const q = query.trim().toLowerCase();
-  const matches = q ? SEARCH_INDEX.filter((e) => e.haystack.includes(q)).slice(0, 6) : [];
+  const q = normalizeSearchText(query.trim());
+  const matches = q ? SEARCH_INDEX.filter((e) => e.haystack.includes(q)) : [];
   const counts = Object.fromEntries(CATEGORIES.map((c) => [c.id, itemsFor(c.id, "all").length]));
 
   return (
     <ScrollArea label="Start">
-      <section className="pt-7">
+      <section className="pt-9">
         <p className="f-eyebrow text-[var(--gold-ink)]">Theresienwiese · München</p>
         <h1 className="f-display mt-2 text-[46px] font-extrabold uppercase leading-[.88] tracking-[-.005em]">
           Find the best prices at
@@ -794,29 +807,32 @@ function HomeScreen({ onOpenCategory, onOpenItem }) {
             Oktoberfest
           </span>
         </h1>
-        <p className="mt-4 max-w-[30ch] text-[16px] leading-snug text-[var(--muted)]">
+        <p className="mt-3 max-w-[30ch] text-[16px] leading-snug text-[var(--muted)]">
           Search for a product, set your budget and compare vendors.
         </p>
       </section>
 
       <form
         role="search"
-        className="relative mt-6"
+        className="relative mt-4"
         onSubmit={(e) => {
           e.preventDefault();
           if (matches[0]) onOpenItem(matches[0]);
         }}
       >
-        <label htmlFor="home-search" className="sr-only">Search for a product</label>
+        <label htmlFor="home-search" className="sr-only">
+          What are you looking for? (e.g. Helles, Brezn, souvenirs)
+        </label>
         <Search size={19} strokeWidth={2.25} aria-hidden="true" className="pointer-events-none absolute left-4 top-6 -translate-y-1/2 text-[var(--muted)]" />
         <input
           id="home-search"
           type="search"
+          aria-label="What are you looking for? (e.g. Helles, Brezn, souvenirs)"
           autoComplete="off"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Maß, Brezn, Riesenrad…"
-          className="h-12 w-full rounded-[14px] bg-[var(--surface)] pl-11 pr-11 text-[16px] text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus-visible:outline-2 focus-visible:outline-[var(--gold)]"
+          placeholder="What are you looking for? (e.g. Helles, Brezn, souvenirs)"
+          className="h-12 w-full rounded-[14px] bg-[var(--surface)] pl-11 pr-11 text-[14px] text-[var(--ink)] placeholder:text-[var(--muted)] sm:text-[16px] focus:outline-none focus-visible:outline-2 focus-visible:outline-[var(--gold)]"
         />
         {query && (
           <button
@@ -835,7 +851,7 @@ function HomeScreen({ onOpenCategory, onOpenItem }) {
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
-              className="absolute inset-x-0 top-[56px] z-10 overflow-hidden rounded-[18px] bg-[var(--surface)] shadow-[0_12px_28px_-12px_rgba(10,25,47,.28)]"
+              className="absolute inset-x-0 top-[56px] z-10 max-h-[min(60vh,420px)] overflow-y-auto rounded-[18px] bg-[var(--surface)] shadow-[0_12px_28px_-12px_rgba(10,25,47,.28)]"
             >
               {matches.length ? (
                 <ul aria-label="Search results" className="h-group rounded-none">
@@ -869,7 +885,7 @@ function HomeScreen({ onOpenCategory, onOpenItem }) {
         </AnimatePresence>
       </form>
 
-      <h2 className="f-eyebrow mb-2 ml-4 mt-8 text-[var(--muted)]">Browse the Wiesn</h2>
+      <h2 className="f-eyebrow mb-2 ml-4 mt-6 text-[var(--muted)]">Browse the Wiesn</h2>
       <nav aria-label="Categories">
         <ul className="h-group">
           {CATEGORIES.map((c) => (
@@ -889,7 +905,7 @@ function HomeScreen({ onOpenCategory, onOpenItem }) {
         </ul>
       </nav>
 
-      <div className="mt-8 flex items-center justify-center gap-2 text-[13px] text-[var(--muted)]">
+      <div className="mt-6 flex items-center justify-center gap-2 text-[13px] text-[var(--muted)]">
         <PretzelMark size={18} className="text-[var(--gold)]" />
         Sample prices in line with recent Wiesn ranges
       </div>
@@ -1020,18 +1036,18 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
         </button>
       </div>
 
-      <div className="flex items-center gap-1 pt-0">
+      <div className="flex items-start gap-1 pt-0">
         <button
           type="button"
           onClick={onBack}
           aria-label={product ? `Back to ${sub.id === "all" ? cat.label : sub.label} list` : "Back to start"}
-          className="-ml-2 grid h-9 w-9 shrink-0 place-items-center rounded-full text-[var(--blue-ink)] transition-[background-color,transform] hover:bg-[var(--press)] active:scale-90"
+          className="-ml-2 mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full text-[var(--blue-ink)] transition-[background-color,transform] hover:bg-[var(--press)] active:scale-90"
         >
           <ArrowLeft size={21} strokeWidth={2.4} />
         </button>
-        <h2 className="min-w-0 flex-1 truncate">
-          <span className="f-display text-[21px] font-extrabold uppercase tracking-[.02em]">{title}</span>
-          <span className="tabular ml-2 text-[13px] text-[var(--muted)]" aria-live="polite">{countLabel}</span>
+        <h2 className="flex min-w-0 flex-1 flex-col items-start">
+          <span className="f-display w-full break-words text-[21px] font-extrabold uppercase leading-tight tracking-[.02em]">{title}</span>
+          <span className="tabular whitespace-nowrap text-[13px] text-[var(--muted)]" aria-live="polite">{countLabel}</span>
         </h2>
         <button
           type="button"
@@ -1041,7 +1057,7 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
           }}
           aria-label={`${sortLabel}. Reverse order`}
           title={sortLabel}
-          className="-mr-1 grid h-9 w-9 shrink-0 place-items-center rounded-full text-[var(--blue-ink)] transition-[background-color,transform] hover:bg-[var(--press)] active:scale-90"
+          className="-mr-1 mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full text-[var(--blue-ink)] transition-[background-color,transform] hover:bg-[var(--press)] active:scale-90"
         >
           <SortIcon size={20} strokeWidth={2.2} />
         </button>
@@ -1051,7 +1067,7 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
 
   return (
     <>
-      <ScrollArea ref={scrollRef} label={title} pinned={pinned}>
+      <ScrollArea ref={scrollRef} label={title} pinned={pinned} extraBottomPadding>
         {visible.length ? (
           <>
             <ul className="h-group mt-1">
