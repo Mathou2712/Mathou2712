@@ -415,6 +415,9 @@ const ScrollArea = React.forwardRef(function ScrollArea({ label, pinned, childre
 function CategoryIcon({ category, size = "md", useHermesIcon = false }) {
   const Icon = category.icon;
   const box = size === "sm" ? "h-7 w-7 rounded-[9px]" : "h-10 w-10 rounded-[12px]";
+  const iconBox = useHermesIcon
+    ? "flex h-12 w-12 shrink-0 items-center justify-center"
+    : `relative grid shrink-0 place-items-center overflow-hidden bg-[var(--blue)] text-[#F4E2B0] ${box}`;
   const hermesIcon = {
     drinks: "/icons/drinks.png",
     foods: "/icons/foods.png",
@@ -423,12 +426,12 @@ function CategoryIcon({ category, size = "md", useHermesIcon = false }) {
     merch: "/icons/souvenirs.png",
   }[category.id];
   return (
-    <span className={`relative grid shrink-0 place-items-center overflow-hidden bg-[var(--blue)] text-[#F4E2B0] ${box}`}>
+    <span className={iconBox}>
       {useHermesIcon && hermesIcon ? (
         <img
           src={hermesIcon}
           alt={category.label}
-          className={size === "sm" ? "absolute left-1/2 top-1/2 h-14 w-14 max-w-none -translate-x-1/2 -translate-y-1/2 object-contain" : "absolute left-1/2 top-1/2 h-20 w-20 max-w-none -translate-x-1/2 -translate-y-1/2 object-contain"}
+          className="h-14 w-14 max-w-none shrink-0 scale-150 object-contain"
         />
       ) : (
         <Icon size={size === "sm" ? 15 : 20} strokeWidth={2.1} />
@@ -902,18 +905,17 @@ function HomeScreen({ onOpenCategory, onOpenItem }) {
 
       <h2 className="f-eyebrow mb-2 ml-4 mt-6 text-[var(--muted)]">Browse the Wiesn</h2>
       <nav aria-label="Categories">
-        <ul className="h-group">
+        <ul className="flex flex-col gap-2.5">
           {CATEGORIES.map((c) => (
             <li key={c.id}>
               <button
                 type="button"
                 onClick={() => onOpenCategory(c.id)}
-                className="flex h-[64px] w-full items-center gap-3.5 px-3.5 text-left transition-colors active:bg-[var(--press)]"
+                className="group flex min-h-12 w-full items-center gap-2.5 rounded-2xl border border-[#D4AF37]/60 bg-[#00213B] px-5 py-3.5 text-left shadow-md transition-[transform,border-color,background-color,box-shadow] duration-150 ease-out hover:-translate-y-0.5 hover:border-[#D4AF37]/70 hover:shadow-md active:scale-[0.98] active:bg-[#00213B]/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D4AF37]"
               >
                 <CategoryIcon category={c} useHermesIcon />
-                <span className="f-display flex-1 text-[22px] font-bold uppercase tracking-[.03em]">{c.label}</span>
-                <span className="tabular text-[14px] text-[var(--muted)]">{counts[c.id]}</span>
-                <ChevronRight size={18} strokeWidth={2.5} aria-hidden="true" className="-mr-1 text-[var(--muted)]" />
+                <span className="flex-1 text-lg font-bold uppercase tracking-wide text-white">{c.label}</span>
+                <ChevronRight size={22} strokeWidth={2.5} aria-hidden="true" className="text-xl text-[#D4AF37] transition-transform duration-200 group-hover:translate-x-0.5" />
               </button>
             </li>
           ))}
