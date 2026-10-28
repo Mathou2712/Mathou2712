@@ -400,7 +400,7 @@ const ScrollArea = React.forwardRef(function ScrollArea({ label, pinned, childre
         >
           <div className="h-gutter">
             <div className="mx-auto max-w-[560px] pb-0 pt-0">
-              <div className="pt-8">{pinned}</div>
+              <div className="pt-2">{pinned}</div>
             </div>
           </div>
         </div>
@@ -416,7 +416,7 @@ function CategoryIcon({ category, size = "md", useHermesIcon = false }) {
   const Icon = category.icon;
   const box = size === "sm" ? "h-7 w-7 rounded-[9px]" : "h-10 w-10 rounded-[12px]";
   const iconBox = useHermesIcon
-    ? `flex shrink-0 items-center justify-center ${size === "sm" ? "h-10 w-10" : "h-12 w-12"}`
+    ? `flex shrink-0 items-center justify-center ${size === "menu" || size === "banner" ? "h-10 w-10" : size === "sm" ? "h-10 w-10" : "h-12 w-12"}`
     : `relative grid shrink-0 place-items-center overflow-hidden bg-[var(--blue)] text-[#F4E2B0] ${box}`;
   const hermesIcon = {
     drinks: "/icons/drinks.png",
@@ -431,7 +431,7 @@ function CategoryIcon({ category, size = "md", useHermesIcon = false }) {
         <img
           src={hermesIcon}
           alt={category.label}
-          className={size === "sm" ? "h-10 w-10 object-contain" : "h-14 w-14 max-w-none shrink-0 scale-150 object-contain"}
+          className={size === "menu" ? "h-10 w-10 scale-150 object-contain" : size === "banner" || size === "sm" ? "h-10 w-10 scale-[1.35] object-contain" : "h-14 w-14 max-w-none shrink-0 scale-150 object-contain"}
         />
       ) : (
         <Icon size={size === "sm" ? 15 : 20} strokeWidth={2.1} />
@@ -513,13 +513,12 @@ function Dropdown({ id, label, value, options, onChange, searchPlaceholder }) {
         aria-expanded={open}
         aria-label={`${label}: ${selected?.label ?? ""}`}
         onClick={() => setOpen((o) => !o)}
-        className="flex h-12 w-full items-center gap-3 rounded-[14px] border border-[#D4AF37]/50 bg-[#00213B] pl-2.5 pr-3.5 text-left text-white transition-[background-color,transform] active:scale-[.98] active:bg-[#002B49]"
+        className="flex w-full items-center gap-3 rounded-lg px-0 py-0 text-left text-white transition-[background-color,transform] active:scale-[.98]"
       >
-        {selected?.icon && <CategoryIcon category={selected} size="sm" useHermesIcon />}
-        <span className="f-display min-w-0 flex-1 truncate text-[19px] font-bold uppercase tracking-[.03em]">{selected?.label}</span>
-        <span className="f-eyebrow hidden text-[#D4AF37] min-[360px]:inline">Change</span>
+        {selected?.icon && <CategoryIcon category={selected} size="banner" useHermesIcon />}
+        <span className="f-display min-w-0 flex-1 truncate text-lg font-bold uppercase text-white">{selected?.label}</span>
         <motion.span animate={{ rotate: open ? 180 : 0 }} className="shrink-0 text-[#D4AF37]">
-          <ChevronDown size={18} strokeWidth={2.5} aria-hidden="true" />
+          <ChevronDown size={16} strokeWidth={2.5} aria-hidden="true" />
         </motion.span>
       </button>
 
@@ -530,10 +529,10 @@ function Dropdown({ id, label, value, options, onChange, searchPlaceholder }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.98 }}
             transition={{ duration: 0.16 }}
-            className="absolute inset-x-0 top-[calc(100%+8px)] overflow-hidden rounded-[18px] bg-[var(--surface)] shadow-[0_12px_28px_-12px_rgba(10,25,47,.28)]"
+            className="absolute inset-x-0 top-[calc(100%+8px)] overflow-hidden rounded-xl border border-[#D4AF37]/50 bg-[#00213B] shadow-xl"
           >
             <div className="relative p-2">
-              <Search size={15} aria-hidden="true" className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-[var(--muted)]" />
+              <Search size={15} aria-hidden="true" className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-[#D4AF37]" />
               <input
                 ref={inputRef}
                 type="search"
@@ -550,10 +549,10 @@ function Dropdown({ id, label, value, options, onChange, searchPlaceholder }) {
                 }}
                 onKeyDown={onKeyDown}
                 placeholder={searchPlaceholder}
-                className="h-10 w-full rounded-[11px] bg-[var(--press)] pl-9 pr-3 text-[15px] text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none"
+                className="h-10 w-full rounded-[11px] border border-[#D4AF37]/30 bg-[#F4F1EA] pl-9 pr-3 text-[15px] text-[#00213B] placeholder:text-[#5B6578] focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/50"
               />
             </div>
-            <ul id={`${id}-list`} role="listbox" aria-label={label} className="h-group rounded-none">
+            <ul id={`${id}-list`} role="listbox" aria-label={label} className="divide-y divide-white/10 bg-[#00213B]">
               {filtered.map((o, i) => {
                 const isSelected = o.id === value;
                 return (
@@ -564,15 +563,15 @@ function Dropdown({ id, label, value, options, onChange, searchPlaceholder }) {
                     aria-selected={isSelected}
                     onMouseEnter={() => setActive(i)}
                     onClick={() => choose(o)}
-                    className={`flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors ${i === active ? "bg-[var(--press)]" : ""}`}
+                    className={`flex cursor-pointer items-center gap-3 px-4 py-3 text-white transition-colors hover:bg-white/10 ${i === active ? "bg-white/10" : ""}`}
                   >
-                    {o.icon && <CategoryIcon category={o} size="sm" />}
-                    <span className={`f-display flex-1 text-[18px] font-semibold ${isSelected ? "text-[var(--blue-ink)]" : ""}`}>{o.label}</span>
-                    {isSelected && <Check size={18} strokeWidth={2.75} aria-hidden="true" className="text-[var(--blue-ink)]" />}
+                    {o.icon && <CategoryIcon category={o} size="menu" useHermesIcon />}
+                    <span className="f-display flex-1 text-[18px] font-medium text-white">{o.label}</span>
+                    {isSelected && <Check size={18} strokeWidth={2.75} aria-hidden="true" className="text-[#D4AF37]" />}
                   </li>
                 );
               })}
-              {!filtered.length && <li className="px-4 py-3 text-sm text-[var(--muted)]">No category matches “{query.trim()}”.</li>}
+              {!filtered.length && <li className="px-4 py-3 text-sm text-white/70">No category matches “{query.trim()}”.</li>}
             </ul>
           </motion.div>
         )}
@@ -1002,22 +1001,32 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
     ? sortDesc ? "Sorted by price, highest first" : "Sorted by price, lowest first"
     : sortDesc ? "Sorted Z to A" : "Sorted A to Z";
 
-  // Sticky controls: one category selector, then sub-category chips with the price button beside them
+  // Keep the category switcher, filters, and sort controls together above the list.
   const pinned = (
-    <div className="flex flex-col gap-4 pt-2">
-      <div className="pt-0">
-        <Dropdown
-          id="category-dropdown"
-          label="Category"
-          value={categoryId}
-          options={CATEGORIES}
-          searchPlaceholder="Search categories"
-          onChange={(id) => onNavigate({ category: id, sub: "all", item: null })}
-        />
+    <div className="flex w-full flex-col gap-0 pt-2">
+      <div className="mb-6 mt-6 flex w-full items-center gap-2">
+        <button
+          type="button"
+          onClick={onBack}
+          aria-label={product ? `Back to ${sub.id === "all" ? cat.label : sub.label} list` : "Back to start"}
+          className="grid h-10 w-10 shrink-0 place-items-center p-2 text-2xl font-bold text-[#00213B] transition-[opacity,transform] hover:opacity-80 active:scale-95"
+        >
+          <ArrowLeft size={24} strokeWidth={2.4} />
+        </button>
+        <div className="min-w-0 flex-1 rounded-xl border border-[#D4AF37]/50 bg-[#00213B] px-4 py-2.5">
+          <Dropdown
+            id="category-dropdown"
+            label="Category"
+            value={categoryId}
+            options={CATEGORIES}
+            searchPlaceholder="Search categories"
+            onChange={(id) => onNavigate({ category: id, sub: "all", item: null })}
+          />
+        </div>
       </div>
 
-      <div className="flex items-center gap-2 pt-0">
-        <div ref={chipsRef} role="radiogroup" aria-label="Sub-category" className="h-chips -my-1 flex min-w-0 flex-1 gap-1.5 overflow-x-auto py-1 pr-6">
+      <div className="mb-6 flex items-center gap-1.5">
+        <div ref={chipsRef} role="radiogroup" aria-label="Sub-category" className="h-chips -my-1 flex min-w-0 flex-1 gap-1.5 overflow-x-auto py-1 pr-2">
           {cat.subs.map((s) => {
             const active = s.id === sub.id;
             return (
@@ -1027,10 +1036,10 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
                 role="radio"
                 aria-checked={active}
                 onClick={() => !active && onNavigate({ category: categoryId, sub: s.id, item: null })}
-                className={`h-9 shrink-0 rounded-full px-4 text-[14px] font-semibold transition-[background-color,color,transform] duration-150 active:scale-95 ${
+                className={`h-9 shrink-0 rounded-full px-3 text-[14px] font-semibold transition-[background-color,color,transform] duration-150 active:scale-95 ${
                   active
-                    ? "border border-[#D4AF37]/40 bg-[#00213B] text-white"
-                    : "border border-transparent bg-[var(--surface)] text-[var(--ink)] hover:bg-[var(--press)]"
+                    ? "border border-[#D4AF37]/50 bg-[#00213B] font-bold text-white"
+                    : "border border-transparent bg-white/80 font-medium text-[#00213B] hover:bg-white"
                 }`}
               >
                 {s.short}
@@ -1047,21 +1056,6 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
         >
           <SlidersHorizontal size={16} strokeWidth={2.4} aria-hidden="true" />
         </button>
-      </div>
-
-      <div className="mt-2 flex items-start gap-1 pt-0">
-        <button
-          type="button"
-          onClick={onBack}
-          aria-label={product ? `Back to ${sub.id === "all" ? cat.label : sub.label} list` : "Back to start"}
-          className="-ml-2 mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full text-[var(--blue-ink)] transition-[background-color,transform] hover:bg-[var(--press)] active:scale-90"
-        >
-          <ArrowLeft size={21} strokeWidth={2.4} />
-        </button>
-        <h2 className="flex min-w-0 flex-1 flex-col items-start">
-          <span className="f-display w-full break-words text-[22px] font-extrabold uppercase leading-tight tracking-[.02em] text-[var(--ink)]">{title}</span>
-          <span className="tabular whitespace-nowrap text-[13px] text-[var(--muted)]" aria-live="polite">{countLabel}</span>
-        </h2>
         <button
           type="button"
           onClick={() => {
@@ -1070,7 +1064,7 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
           }}
           aria-label={`${sortLabel}. Reverse order`}
           title={sortLabel}
-          className="-mr-1 mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full text-[var(--blue-ink)] transition-[background-color,transform] hover:bg-[var(--press)] active:scale-90"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#D4AF37] transition-[background-color,transform] hover:bg-[var(--press)] active:scale-90"
         >
           <SortIcon size={20} strokeWidth={2.2} />
         </button>
@@ -1081,6 +1075,12 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
   return (
     <>
       <ScrollArea ref={scrollRef} label={title} pinned={pinned} extraBottomPadding>
+        {product && (
+          <div className="mb-2 mt-6">
+            <h2 className="f-display mb-1 text-xl font-bold uppercase leading-tight tracking-wide text-[#00213B]">{title}</h2>
+            <p className="tabular mb-4 text-[13px] text-[var(--muted)]" aria-live="polite">{countLabel}</p>
+          </div>
+        )}
         {hasActivePriceFilter && (
           <div className="mb-2 mt-3 flex w-fit items-center overflow-hidden rounded-full border border-[rgba(212,175,55,0.65)] bg-[var(--gold-soft)] text-[var(--ink)]">
             <button
@@ -1141,7 +1141,7 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
                 <button
                   type="button"
                   onClick={() => setLimit(shown.length + PAGE_SIZE)}
-                  className="f-display tabular h-11 rounded-full border border-[#D4AF37]/40 bg-[#00213B] px-6 text-[17px] font-bold uppercase tracking-[.06em] text-white transition-transform active:scale-95"
+                  className="f-display tabular h-11 rounded-full border border-[#D4AF37]/50 bg-[#00213B] px-6 text-[17px] font-bold uppercase tracking-[.06em] text-white transition-all duration-150 hover:bg-[#00213B]/90 active:scale-[0.98]"
                 >
                   Show {Math.min(PAGE_SIZE, remaining)} more
                 </button>
