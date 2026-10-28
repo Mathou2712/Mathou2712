@@ -416,7 +416,7 @@ function CategoryIcon({ category, size = "md", useHermesIcon = false }) {
   const Icon = category.icon;
   const box = size === "sm" ? "h-7 w-7 rounded-[9px]" : "h-10 w-10 rounded-[12px]";
   const iconBox = useHermesIcon
-    ? "flex h-12 w-12 shrink-0 items-center justify-center"
+    ? `flex shrink-0 items-center justify-center ${size === "sm" ? "h-10 w-10" : "h-12 w-12"}`
     : `relative grid shrink-0 place-items-center overflow-hidden bg-[var(--blue)] text-[#F4E2B0] ${box}`;
   const hermesIcon = {
     drinks: "/icons/drinks.png",
@@ -431,7 +431,7 @@ function CategoryIcon({ category, size = "md", useHermesIcon = false }) {
         <img
           src={hermesIcon}
           alt={category.label}
-          className="h-14 w-14 max-w-none shrink-0 scale-150 object-contain"
+          className={size === "sm" ? "h-10 w-10 object-contain" : "h-14 w-14 max-w-none shrink-0 scale-150 object-contain"}
         />
       ) : (
         <Icon size={size === "sm" ? 15 : 20} strokeWidth={2.1} />
@@ -513,12 +513,12 @@ function Dropdown({ id, label, value, options, onChange, searchPlaceholder }) {
         aria-expanded={open}
         aria-label={`${label}: ${selected?.label ?? ""}`}
         onClick={() => setOpen((o) => !o)}
-        className="flex h-12 w-full items-center gap-3 rounded-[14px] bg-[var(--surface)] pl-2.5 pr-3.5 text-left transition-[background-color,transform] active:scale-[.98] active:bg-[var(--press)]"
+        className="flex h-12 w-full items-center gap-3 rounded-[14px] border border-[#D4AF37]/50 bg-[#00213B] pl-2.5 pr-3.5 text-left text-white transition-[background-color,transform] active:scale-[.98] active:bg-[#002B49]"
       >
-        {selected?.icon && <CategoryIcon category={selected} size="sm" />}
+        {selected?.icon && <CategoryIcon category={selected} size="sm" useHermesIcon />}
         <span className="f-display min-w-0 flex-1 truncate text-[19px] font-bold uppercase tracking-[.03em]">{selected?.label}</span>
-        <span className="f-eyebrow hidden text-[var(--muted)] min-[360px]:inline">Change</span>
-        <motion.span animate={{ rotate: open ? 180 : 0 }} className="shrink-0 text-[var(--blue-ink)]">
+        <span className="f-eyebrow hidden text-[#D4AF37] min-[360px]:inline">Change</span>
+        <motion.span animate={{ rotate: open ? 180 : 0 }} className="shrink-0 text-[#D4AF37]">
           <ChevronDown size={18} strokeWidth={2.5} aria-hidden="true" />
         </motion.span>
       </button>
@@ -607,14 +607,14 @@ function ExpandRow({ id, name, price, showFrom, best, type, location, expanded, 
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       data-row={id}
-      className={`overflow-hidden bg-white transition-colors ${best ? "rounded-t-2xl border-2 border-[#D4AF37]" : "rounded-t-2xl ring-1 ring-inset ring-[var(--hair)]"}`}
+      className={`overflow-hidden bg-[var(--surface)] transition-colors ${best ? "rounded-t-2xl border-2 border-[#D4AF37]" : "rounded-t-2xl border border-[#D4AF37]/30"}`}
     >
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={expanded}
         aria-controls={`${id}-details`}
-        className="flex min-h-[58px] w-full items-center gap-3 bg-white px-4 py-2.5 text-left transition-colors active:bg-[var(--press)]"
+        className="flex min-h-[58px] w-full items-center gap-3 bg-[var(--surface)] px-4 py-2.5 text-left transition-colors active:bg-[var(--press)]"
       >
         <span className={`f-display min-w-0 flex-1 break-normal hyphens-manual text-[19px] font-semibold leading-tight text-[var(--ink)] ${expanded ? "text-[var(--blue-ink)]" : ""}`}>
           {name}
@@ -626,7 +626,7 @@ function ExpandRow({ id, name, price, showFrom, best, type, location, expanded, 
               {best && <span className="rounded-full bg-[#D4AF37] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#005293]">BEST PRICE</span>}
             </div>
           ) : null}
-          <motion.span animate={{ rotate: expanded ? 180 : 0 }} className="-mr-1 shrink-0 text-[var(--muted)]">
+          <motion.span animate={{ rotate: expanded ? 180 : 0 }} className="-mr-1 shrink-0 text-[var(--gold-ink)]">
             <ChevronDown size={18} strokeWidth={2.5} aria-hidden="true" />
           </motion.span>
         </div>
@@ -639,7 +639,7 @@ function ExpandRow({ id, name, price, showFrom, best, type, location, expanded, 
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="border-t border-[var(--hair)] bg-[#F0F7FF] px-4 pb-4 pt-3"
+            className="border-t border-[#D4AF37]/30 bg-[#F0F7FF] px-4 pb-4 pt-3"
           >
             <dl className="grid grid-cols-[auto_1fr] items-center gap-x-2.5 gap-y-1.5 text-[15px] text-[var(--ink)]">
               <Store size={15} aria-hidden="true" className="text-[var(--blue-ink)]" />
@@ -1029,8 +1029,8 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
                 onClick={() => !active && onNavigate({ category: categoryId, sub: s.id, item: null })}
                 className={`h-9 shrink-0 rounded-full px-4 text-[14px] font-semibold transition-[background-color,color,transform] duration-150 active:scale-95 ${
                   active
-                    ? "bg-[var(--ink)] text-[var(--bg)]"
-                    : "bg-[var(--surface)] text-[var(--ink)] hover:bg-[var(--press)]"
+                    ? "border border-[#D4AF37]/40 bg-[#00213B] text-white"
+                    : "border border-transparent bg-[var(--surface)] text-[var(--ink)] hover:bg-[var(--press)]"
                 }`}
               >
                 {s.short}
@@ -1104,7 +1104,7 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
         )}
         {visible.length ? (
           <>
-            <ul className="h-group mt-1">
+            <ul className="h-group mt-1 border border-[#D4AF37]/30">
               <AnimatePresence initial={false} mode="popLayout">
                 {shown.map((r) =>
                   isVendorView ? (
@@ -1141,7 +1141,7 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
                 <button
                   type="button"
                   onClick={() => setLimit(shown.length + PAGE_SIZE)}
-                  className="f-display tabular h-11 rounded-full bg-[var(--ink)] px-6 text-[17px] font-bold uppercase tracking-[.06em] text-[var(--bg)] transition-transform active:scale-95"
+                  className="f-display tabular h-11 rounded-full border border-[#D4AF37]/40 bg-[#00213B] px-6 text-[17px] font-bold uppercase tracking-[.06em] text-white transition-transform active:scale-95"
                 >
                   Show {Math.min(PAGE_SIZE, remaining)} more
                 </button>
