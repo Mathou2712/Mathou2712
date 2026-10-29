@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useMemo, useRef, useState 
 import logoImg from '../public/oktoberfest-logo.png';
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import {
-  Info, Search, ChevronDown, ChevronRight, ArrowLeft, ArrowDownAZ, ArrowDownZA, ArrowDown01, ArrowDown10,
+  Info, Search, ChevronDown, ChevronRight, ChevronLeft as ChevronLeftIcon, ArrowLeft, ArrowDownAZ, ArrowDownZA, ArrowDown01, ArrowDown10,
   SlidersHorizontal, X, Beer, UtensilsCrossed, FerrisWheel, Target, Gift, Check, MapPin, Store,
 } from "lucide-react";
 
@@ -78,20 +78,24 @@ h1,h2,h3{text-wrap:balance}
 
 /* Festival ticket price badge: clear, tactile, and less gimmicky */
 .h-ticket{position:relative;display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px;border-radius:999px;
-  background:#005293;color:#fff;white-space:nowrap;box-shadow:inset 0 0 0 1px rgba(10,25,47,.12);}
+  background:#00213B;color:#fff;white-space:nowrap;box-shadow:inset 0 0 0 1px rgba(10,25,47,.12);}
 .h-ticket::after{display:none;}
-.h-ticket-best{background:linear-gradient(180deg,#E5A93C,#D4AF37);color:var(--blue-ink);box-shadow:inset 0 0 0 1px rgba(10,25,47,.12);}
+.h-ticket-best{background:#00213B;color:#D4AF37;box-shadow:inset 0 0 0 1px rgba(212,175,55,.35);}
 .h-ticket-label{font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:700;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;opacity:.8;color:inherit;}
 .h-ticket-price{font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;color:inherit;}
 
 .h-chips{scrollbar-width:none;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 22px),transparent);}
 .h-chips::-webkit-scrollbar{display:none}
 input[type="search"]::-webkit-search-cancel-button{-webkit-appearance:none;display:none}
-.h-range{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;cursor:pointer;
-  background:linear-gradient(var(--blue),var(--blue)) 0/var(--fill,50%) 100% no-repeat,var(--hair);}
-.h-range::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:var(--gold);border:4px solid var(--surface);box-shadow:0 1px 4px rgba(10,25,47,.35);transition:transform .15s;}
-.h-range:active::-webkit-slider-thumb{transform:scale(1.12);}
-.h-range::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--gold);border:4px solid var(--surface);box-shadow:0 1px 4px rgba(10,25,47,.35);}
+.h-range{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;cursor:grab;
+  background:linear-gradient(#00213B,#00213B) 0/var(--fill,50%) 100% no-repeat,rgba(212,175,55,.25);}
+.h-range::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:#D4AF37;border:2px solid #fff;box-shadow:0 0 0 4px rgba(0,33,59,.1),0 4px 8px rgba(0,33,59,.28);transition:transform .15s;}
+.h-range:hover::-webkit-slider-thumb{transform:scale(1.1);}
+.h-range:active{cursor:grabbing;}
+.h-range:active::-webkit-slider-thumb{transform:scale(.95);}
+.h-range::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#D4AF37;border:2px solid #fff;box-shadow:0 0 0 4px rgba(0,33,59,.1),0 4px 8px rgba(0,33,59,.28);transition:transform .15s;}
+.h-range:hover::-moz-range-thumb{transform:scale(1.1);}
+.h-range:active::-moz-range-thumb{transform:scale(.95);}
 :focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
 @media (prefers-reduced-motion: reduce){*{transition-duration:0s !important}}
 `;
@@ -412,26 +416,32 @@ const ScrollArea = React.forwardRef(function ScrollArea({ label, pinned, childre
   );
 });
 
+const CATEGORY_ICON_PATHS = {
+  drinks: "/icons/drinks.png",
+  foods: "/icons/foods.png",
+  rides: "/icons/rides.png",
+  games: "/icons/games.png",
+  merch: "/icons/souvenirs.png",
+};
+
 function CategoryIcon({ category, size = "md", useHermesIcon = false }) {
   const Icon = category.icon;
   const box = size === "sm" ? "h-7 w-7 rounded-[9px]" : "h-10 w-10 rounded-[12px]";
+  const iconSize = size === "menu" || size === "banner" ? "h-8 w-8" : "h-10 w-10";
   const iconBox = useHermesIcon
-    ? `flex shrink-0 items-center justify-center ${size === "menu" || size === "banner" ? "h-10 w-10" : size === "sm" ? "h-10 w-10" : "h-12 w-12"}`
+    ? `flex ${iconSize} shrink-0 items-center justify-center`
     : `relative grid shrink-0 place-items-center overflow-hidden bg-[var(--blue)] text-[#F4E2B0] ${box}`;
-  const hermesIcon = {
-    drinks: "/icons/drinks.png",
-    foods: "/icons/foods.png",
-    rides: "/icons/rides.png",
-    games: "/icons/games.png",
-    merch: "/icons/souvenirs.png",
-  }[category.id];
+  const hermesIcon = CATEGORY_ICON_PATHS[category.id];
   return (
     <span className={iconBox}>
       {useHermesIcon && hermesIcon ? (
         <img
           src={hermesIcon}
           alt={category.label}
-          className={size === "menu" ? "h-10 w-10 scale-150 object-contain" : size === "banner" || size === "sm" ? "h-10 w-10 scale-[1.35] object-contain" : "h-14 w-14 max-w-none shrink-0 scale-150 object-contain"}
+          onError={(e) => {
+            e.currentTarget.style.display = "none";
+          }}
+          className={`${iconSize} scale-[1.35] object-contain drop-shadow-sm`}
         />
       ) : (
         <Icon size={size === "sm" ? 15 : 20} strokeWidth={2.1} />
@@ -440,41 +450,39 @@ function CategoryIcon({ category, size = "md", useHermesIcon = false }) {
   );
 }
 
-function PriceTicket({ price, label, best }) {
+function PriceTicket({ price, label, best, vendor = false }) {
+  const vendorPriceClass = `inline-flex min-w-[54px] items-center justify-center gap-1 rounded-xl px-3 py-1 text-xs font-black shadow-sm ${
+    best ? "bg-[#D4AF37] text-[#00213B]" : "bg-[#00213B] text-white"
+  }`;
+
   return (
     <span
-      className={`h-ticket border ${best ? "h-ticket-best border-[rgba(212,175,55,0.65)]" : "bg-[#005293] text-white border-[rgba(10,25,47,0.08)]"}`}
+      className={vendor ? vendorPriceClass : `h-ticket border ${best ? "h-ticket-best border-[#D4AF37]/60" : "bg-[#00213B] text-white border-[rgba(10,25,47,0.08)]"}`}
       aria-label={best ? `Best price ${formatPrice(price)}` : undefined}
     >
-      {label && label !== "Best" && <span className="h-ticket-label">{label}</span>}
-      <span className="h-ticket-price">{formatPrice(price)}</span>
+      {label && label !== "Best" && <span className={vendor ? "text-[9px] font-bold uppercase opacity-80" : "h-ticket-label"}>{label}</span>}
+      <span className={vendor ? "tabular text-xs font-black" : "h-ticket-price"}>{formatPrice(price)}</span>
     </span>
   );
 }
 
-// Category selector: a filled field that opens a search box over an inset, iOS-style option list
-function Dropdown({ id, label, value, options, onChange, searchPlaceholder }) {
+// Category selector with a compact, keyboard-navigable option list
+function Dropdown({ id, label, value, options, onChange }) {
   const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const rootRef = useRef(null);
   const buttonRef = useRef(null);
-  const inputRef = useRef(null);
 
   const selected = options.find((o) => o.id === value);
-  const filtered = options.filter((o) => o.label.toLowerCase().includes(query.trim().toLowerCase()));
 
   useEffect(() => {
     if (!open) return;
-    setQuery("");
     setActive(Math.max(0, options.findIndex((o) => o.id === value)));
-    const t = setTimeout(() => inputRef.current?.focus(), 0);
     const onPointerDown = (e) => {
       if (!rootRef.current?.contains(e.target)) setOpen(false);
     };
     document.addEventListener("pointerdown", onPointerDown);
     return () => {
-      clearTimeout(t);
       document.removeEventListener("pointerdown", onPointerDown);
     };
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -490,13 +498,13 @@ function Dropdown({ id, label, value, options, onChange, searchPlaceholder }) {
   const onKeyDown = (e) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setActive((a) => Math.min(a + 1, filtered.length - 1));
+      setActive((a) => Math.min(a + 1, options.length - 1));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setActive((a) => Math.max(a - 1, 0));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      if (filtered[active]) choose(filtered[active]);
+      if (options[active]) choose(options[active]);
     } else if (e.key === "Escape") {
       e.preventDefault();
       close();
@@ -504,7 +512,7 @@ function Dropdown({ id, label, value, options, onChange, searchPlaceholder }) {
   };
 
   return (
-    <div ref={rootRef} className={`relative ${open ? "z-20" : ""}`}>
+    <div ref={rootRef} className={`relative w-fit max-w-full ${open ? "z-20" : ""}`}>
       <button
         ref={buttonRef}
         id={id}
@@ -512,12 +520,14 @@ function Dropdown({ id, label, value, options, onChange, searchPlaceholder }) {
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={`${label}: ${selected?.label ?? ""}`}
+        aria-controls={`${id}-list`}
+        aria-activedescendant={open && options[active] ? `${id}-opt-${options[active].id}` : undefined}
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-3 rounded-lg px-0 py-0 text-left text-white transition-[background-color,transform] active:scale-[.98]"
+        onKeyDown={onKeyDown}
+        className="flex w-fit max-w-full items-center gap-2 px-0 py-0 text-left text-[#00213B] transition-[background-color,transform] active:scale-[.98]"
       >
-        {selected?.icon && <CategoryIcon category={selected} size="banner" useHermesIcon />}
-        <span className="f-display min-w-0 flex-1 truncate text-lg font-bold uppercase text-white">{selected?.label}</span>
-        <motion.span animate={{ rotate: open ? 180 : 0 }} className="shrink-0 text-[#D4AF37]">
+        <span className="f-display min-w-0 truncate text-xl font-extrabold uppercase tracking-wide text-[#00213B]">{selected?.label}</span>
+        <motion.span animate={{ rotate: open ? 180 : 0 }} className="ml-2 h-4 w-4 shrink-0 text-[#00213B]/70">
           <ChevronDown size={16} strokeWidth={2.5} aria-hidden="true" />
         </motion.span>
       </button>
@@ -529,31 +539,10 @@ function Dropdown({ id, label, value, options, onChange, searchPlaceholder }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.98 }}
             transition={{ duration: 0.16 }}
-            className="absolute inset-x-0 top-[calc(100%+8px)] overflow-hidden rounded-xl border border-[#D4AF37]/50 bg-[#00213B] shadow-xl"
+            className="absolute left-0 top-[calc(100%+8px)] z-30 w-48 max-w-[calc(100vw-36px)] overflow-hidden rounded-xl border-2 border-[#D4AF37] bg-[#F9F8F3] py-2 text-[#00213B] shadow-xl"
           >
-            <div className="relative p-2">
-              <Search size={15} aria-hidden="true" className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-[#D4AF37]" />
-              <input
-                ref={inputRef}
-                type="search"
-                role="combobox"
-                aria-expanded="true"
-                aria-controls={`${id}-list`}
-                aria-activedescendant={filtered[active] ? `${id}-opt-${filtered[active].id}` : undefined}
-                aria-label={`Filter ${label.toLowerCase()} options`}
-                autoComplete="off"
-                value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value);
-                  setActive(0);
-                }}
-                onKeyDown={onKeyDown}
-                placeholder={searchPlaceholder}
-                className="h-10 w-full rounded-[11px] border border-[#D4AF37]/30 bg-[#F4F1EA] pl-9 pr-3 text-[15px] text-[#00213B] placeholder:text-[#5B6578] focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/50"
-              />
-            </div>
-            <ul id={`${id}-list`} role="listbox" aria-label={label} className="divide-y divide-white/10 bg-[#00213B]">
-              {filtered.map((o, i) => {
+            <ul id={`${id}-list`} role="listbox" aria-label={label} className="bg-[#F9F8F3]">
+              {options.map((o, i) => {
                 const isSelected = o.id === value;
                 return (
                   <li
@@ -563,15 +552,13 @@ function Dropdown({ id, label, value, options, onChange, searchPlaceholder }) {
                     aria-selected={isSelected}
                     onMouseEnter={() => setActive(i)}
                     onClick={() => choose(o)}
-                    className={`flex cursor-pointer items-center gap-3 px-4 py-3 text-white transition-colors hover:bg-white/10 ${i === active ? "bg-white/10" : ""}`}
+                    className={`mx-1 my-0.5 flex cursor-pointer items-center rounded-lg px-3 py-2 text-[#00213B] transition-colors hover:bg-[#D4AF37]/15 ${i === active ? "bg-[#D4AF37]/15" : ""}`}
                   >
-                    {o.icon && <CategoryIcon category={o} size="menu" useHermesIcon />}
-                    <span className="f-display flex-1 text-[18px] font-medium text-white">{o.label}</span>
-                    {isSelected && <Check size={18} strokeWidth={2.75} aria-hidden="true" className="text-[#D4AF37]" />}
+                    <span className="f-display flex-1 text-sm font-bold text-[#00213B]">{o.label}</span>
+                    {isSelected && <span aria-hidden="true" className="text-[#D4AF37]">✓</span>}
                   </li>
                 );
               })}
-              {!filtered.length && <li className="px-4 py-3 text-sm text-white/70">No category matches “{query.trim()}”.</li>}
             </ul>
           </motion.div>
         )}
@@ -587,7 +574,7 @@ function LinkRow({ name, price, onClick, showPrice = true }) {
       <button
         type="button"
         onClick={onClick}
-        className="flex min-h-[58px] w-full items-center gap-3 px-4 py-2.5 text-left transition-colors active:bg-[var(--press)]"
+        className="flex min-h-[58px] w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors active:bg-[var(--press)]"
       >
         <span className="f-display min-w-0 flex-1 text-[19px] font-semibold leading-tight">{name}</span>
         {priceIsRenderable ? <PriceTicket price={price} label="from" /> : null}
@@ -606,25 +593,25 @@ function ExpandRow({ id, name, price, showFrom, best, type, location, expanded, 
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       data-row={id}
-      className={`overflow-hidden bg-[var(--surface)] transition-colors ${best ? "rounded-t-2xl border-2 border-[#D4AF37]" : "rounded-t-2xl border border-[#D4AF37]/30"}`}
+      className={`overflow-hidden transition-colors ${best ? "border-l-4 border-l-[#D4AF37] bg-[#D4AF37]/5" : "bg-[#F9F8F3]"}`}
     >
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={expanded}
         aria-controls={`${id}-details`}
-        className="flex min-h-[58px] w-full items-center gap-3 bg-[var(--surface)] px-4 py-2.5 text-left transition-colors active:bg-[var(--press)]"
+        className={`flex min-h-[58px] w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors active:bg-[var(--press)] ${best ? "bg-[#D4AF37]/5" : "bg-[#F9F8F3]"}`}
       >
         <span className={`f-display min-w-0 flex-1 break-normal hyphens-manual text-[19px] font-semibold leading-tight text-[var(--ink)] ${expanded ? "text-[var(--blue-ink)]" : ""}`}>
           {name}
         </span>
         <div className="flex shrink-0 items-center gap-2">
-          {priceIsRenderable ? (
-            <div className="flex flex-col items-end gap-1 sm:flex-row-reverse sm:items-center sm:gap-2">
-              <PriceTicket price={price} label={showFrom ? "from" : null} best={best} />
-              {best && <span className="rounded-full bg-[#D4AF37] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#005293]">BEST PRICE</span>}
-            </div>
-          ) : null}
+          {priceIsRenderable && best && (
+            <span className="rounded-full bg-[#D4AF37] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#00213B] shadow-sm">
+              BEST PRICE
+            </span>
+          )}
+          {priceIsRenderable && <PriceTicket price={price} label={showFrom ? "from" : null} best={best} vendor />}
           <motion.span animate={{ rotate: expanded ? 180 : 0 }} className="-mr-1 shrink-0 text-[var(--gold-ink)]">
             <ChevronDown size={18} strokeWidth={2.5} aria-hidden="true" />
           </motion.span>
@@ -638,7 +625,7 @@ function ExpandRow({ id, name, price, showFrom, best, type, location, expanded, 
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="border-t border-[#D4AF37]/30 bg-[#F0F7FF] px-4 pb-4 pt-3"
+            className="border-t border-[#D4AF37]/30 bg-[#F9F8F3] px-4 pb-4 pt-3"
           >
             <dl className="grid grid-cols-[auto_1fr] items-center gap-x-2.5 gap-y-1.5 text-[15px] text-[var(--ink)]">
               <Store size={15} aria-hidden="true" className="text-[var(--blue-ink)]" />
@@ -700,7 +687,7 @@ function BudgetPopup({ open, max, value, onClose, onApply }) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
-          <div className="absolute inset-0 bg-[var(--scrim)]" onClick={onClose} aria-hidden="true" />
+          <div className="absolute inset-0 bg-[#00213B]/60 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
           <motion.form
             role="dialog"
             aria-modal="true"
@@ -714,7 +701,7 @@ function BudgetPopup({ open, max, value, onClose, onApply }) {
             animate={{ y: 0, scale: 1 }}
             exit={{ y: -18, scale: 0.96 }}
             transition={{ type: "spring", stiffness: 430, damping: 32 }}
-            className="relative w-full max-w-[380px] overflow-hidden rounded-[24px] bg-[var(--surface)] px-6 pb-6 pt-7 shadow-[0_24px_60px_-18px_rgba(10,25,47,.55)]"
+            className="relative w-full max-w-[380px] overflow-hidden rounded-2xl border-2 border-[#D4AF37] bg-[#F9F8F3] p-6 pt-7 shadow-2xl"
           >
             <div className="h-rauten absolute inset-x-0 top-0 h-1" aria-hidden="true" />
             <button
@@ -722,12 +709,12 @@ function BudgetPopup({ open, max, value, onClose, onApply }) {
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="absolute right-3 top-4 grid h-9 w-9 place-items-center rounded-full text-[var(--muted)] transition-[background-color,transform] hover:bg-[var(--press)] active:scale-90"
+              className="absolute right-3 top-4 grid h-9 w-9 place-items-center rounded-full text-[#00213B]/60 transition-[background-color,color,transform] hover:bg-[#00213B]/5 hover:text-[#00213B] active:scale-90"
             >
               <X size={20} strokeWidth={2.5} />
             </button>
-            <p className="f-eyebrow text-[var(--gold-ink)]">Your budget</p>
-            <h2 id="budget-title" className="f-display mt-1 text-[28px] font-extrabold uppercase leading-none tracking-[.01em]">
+            <p className="f-eyebrow text-xs font-extrabold tracking-widest text-[#D4AF37]">Your budget</p>
+            <h2 id="budget-title" className="f-display mt-1 text-2xl font-black uppercase leading-none tracking-wide text-[#00213B]">
               Maximum price
             </h2>
             <p id="budget-desc" className="mt-2 pr-8 text-[15px] leading-snug text-[var(--muted)]">
@@ -747,16 +734,16 @@ function BudgetPopup({ open, max, value, onClose, onApply }) {
               style={{ "--fill": `${pct}%` }}
             />
 
-            <div className="tabular mt-4 flex items-center justify-between gap-3 text-[15px] font-semibold text-[var(--muted)]">
+            <div className="tabular mt-4 flex items-center justify-between gap-3 text-[15px] font-semibold text-[#00213B]/70">
               <span>€0</span>
               {/* The ticket's notch mask would clip an outline, so the focus ring sits on this wrapper */}
               <span
-                className={`rounded-full p-[1px] transition-shadow ${
-                  outOfRange ? "shadow-[0_0_0_2px_var(--danger)]" : "focus-within:shadow-[0_0_0_2px_rgba(0,82,147,0.18)]"
+                className={`rounded-xl p-[1px] transition-shadow ${
+                  outOfRange ? "shadow-[0_0_0_2px_var(--danger)]" : "focus-within:shadow-[0_0_0_2px_rgba(212,175,55,0.28)]"
                 }`}
               >
-              <label className="flex cursor-text items-center rounded-full border border-slate-300 bg-white px-4 py-2 text-[#005293] transition-colors focus-within:border-[#005293] focus-within:ring-2 focus-within:ring-[#005293]/20 focus-within:outline-none">
-                <span aria-hidden="true" className="mr-1 text-lg font-semibold text-[#005293]">€</span>
+              <label className="flex cursor-text items-center justify-center gap-1 rounded-xl border-2 border-[#D4AF37]/50 bg-white px-4 py-2 text-[#00213B] transition-colors focus-within:border-[#D4AF37] focus-within:ring-2 focus-within:ring-[#D4AF37]/20 focus-within:outline-none">
+                <span aria-hidden="true" className="text-xl font-black text-[#00213B]">€</span>
                 <input
                   id="budget-input"
                   type="text"
@@ -768,7 +755,7 @@ function BudgetPopup({ open, max, value, onClose, onApply }) {
                   value={text}
                   onChange={(e) => onType(e.target.value)}
                   onBlur={() => setText(formatInput(draft))}
-                  className="tabular w-16 min-w-0 border-0 bg-transparent text-center text-lg font-semibold text-[#005293] placeholder:text-slate-400 focus:outline-none"
+                  className="tabular w-16 min-w-0 border-0 bg-transparent text-center text-xl font-black text-[#00213B] placeholder:text-slate-400 focus:outline-none"
                 />
               </label>
               </span>
@@ -782,17 +769,19 @@ function BudgetPopup({ open, max, value, onClose, onApply }) {
               {outOfRange ? `Enter a price from €0 to ${formatPrice(max)}.` : "Drag the slider or type a price."}
             </p>
 
-            <button
-              type="submit"
-              className="f-display mx-auto mt-5 block h-12 w-full rounded-full bg-[var(--gold)] text-[19px] font-bold uppercase tracking-[.06em] text-[var(--on-gold)] transition-[background-color,transform] hover:bg-[var(--gold-deep)] active:scale-95"
-            >
-              Show results
-            </button>
+            <div className="mt-5 text-center">
+              <button
+                type="submit"
+                className="bg-[#00213B] px-8 py-3.5 text-sm font-black uppercase tracking-wider text-[#F9F8F3] rounded-full shadow-md transition-all hover:bg-[#00182C] active:scale-95"
+              >
+                Show results
+              </button>
+            </div>
             {value !== null && (
               <button
                 type="button"
                 onClick={() => onApply(null)}
-                className="mx-auto mt-3 block rounded-md px-2 text-sm font-semibold text-[var(--blue-ink)] underline underline-offset-4 transition-transform active:scale-95"
+                className="mx-auto mt-3 block rounded-md px-2 text-xs font-bold text-[#00213B]/70 underline underline-offset-4 transition-colors hover:text-[#00213B]"
               >
                 Remove price limit
               </button>
@@ -831,7 +820,7 @@ function HomeScreen({ onOpenCategory, onOpenItem }) {
 
       <form
         role="search"
-        className="relative mt-4"
+        className="relative mx-auto mt-4 w-full max-w-[310px]"
         onSubmit={(e) => {
           e.preventDefault();
           if (matches[0]) onOpenItem(matches[0]);
@@ -902,24 +891,41 @@ function HomeScreen({ onOpenCategory, onOpenItem }) {
         </AnimatePresence>
       </form>
 
-      <h2 className="f-eyebrow mb-2 ml-4 mt-6 text-[var(--muted)]">Browse the Wiesn</h2>
-      <nav aria-label="Categories">
-        <ul className="flex flex-col gap-2.5">
-          {CATEGORIES.map((c) => (
-            <li key={c.id}>
-              <button
-                type="button"
-                onClick={() => onOpenCategory(c.id)}
-                className="group flex min-h-12 w-full items-center gap-2.5 rounded-2xl border border-[#D4AF37]/60 bg-[#00213B] px-5 py-3.5 text-left shadow-md transition-[transform,border-color,background-color,box-shadow] duration-150 ease-out hover:-translate-y-0.5 hover:border-[#D4AF37]/70 hover:shadow-md active:scale-[0.98] active:bg-[#00213B]/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D4AF37]"
-              >
-                <CategoryIcon category={c} useHermesIcon />
-                <span className="flex-1 text-lg font-bold uppercase tracking-wide text-white">{c.label}</span>
-                <ChevronRight size={22} strokeWidth={2.5} aria-hidden="true" className="text-xl text-[#D4AF37] transition-transform duration-200 group-hover:translate-x-0.5" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      <div className="mx-auto mt-6 w-full max-w-[310px]">
+        <h2 className="f-eyebrow mb-2 text-[var(--muted)]">Browse the Wiesn</h2>
+        <nav aria-label="Categories">
+          <ul className="flex flex-col gap-2">
+          {CATEGORIES.map((c) => {
+            const iconPath = CATEGORY_ICON_PATHS[c.id];
+            return (
+              <li key={c.id}>
+                <button
+                  type="button"
+                  onClick={() => onOpenCategory(c.id)}
+                  className="group flex min-h-[52px] w-full items-center justify-between gap-4 rounded-2xl border border-[#D4AF37]/60 bg-[#00213B] px-4 py-2.5 text-left shadow-md transition-[transform,border-color,background-color,box-shadow] duration-150 ease-out hover:-translate-y-0.5 hover:border-[#D4AF37]/70 hover:shadow-md active:scale-[0.98] active:bg-[#00213B]/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D4AF37]"
+                >
+                  <div className="flex min-w-0 flex-1 items-center gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center">
+                      <img
+                        src={iconPath}
+                        alt=""
+                        aria-hidden="true"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                        className="h-full w-full scale-125 object-contain brightness-110 drop-shadow-sm"
+                      />
+                    </div>
+                    <span className="flex-1 text-base font-extrabold uppercase tracking-wide text-white">{c.label}</span>
+                  </div>
+                  <ChevronRight size={22} strokeWidth={2.5} aria-hidden="true" className="text-xl text-[#D4AF37] transition-transform duration-200 group-hover:translate-x-0.5" />
+                </button>
+              </li>
+            );
+          })}
+          </ul>
+        </nav>
+      </div>
 
       <div className="mt-6 flex items-center justify-center gap-2 text-[13px] text-[var(--muted)]">
         <PretzelMark size={18} className="text-[var(--gold)]" />
@@ -1009,17 +1015,16 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
           type="button"
           onClick={onBack}
           aria-label={product ? `Back to ${sub.id === "all" ? cat.label : sub.label} list` : "Back to start"}
-          className="grid h-10 w-10 shrink-0 place-items-center p-2 text-2xl font-bold text-[#00213B] transition-[opacity,transform] hover:opacity-80 active:scale-95"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg p-2 text-xl font-bold text-[#00213B] transition-[background-color,transform] hover:bg-black/5 active:scale-95"
         >
           <ArrowLeft size={24} strokeWidth={2.4} />
         </button>
-        <div className="min-w-0 flex-1 rounded-xl border border-[#D4AF37]/50 bg-[#00213B] px-4 py-2.5">
+        <div className="min-w-0 flex-1 px-2 py-2">
           <Dropdown
             id="category-dropdown"
             label="Category"
             value={categoryId}
             options={CATEGORIES}
-            searchPlaceholder="Search categories"
             onChange={(id) => onNavigate({ category: id, sub: "all", item: null })}
           />
         </div>
@@ -1039,7 +1044,7 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
                 className={`h-9 shrink-0 rounded-full px-3 text-[14px] font-semibold transition-[background-color,color,transform] duration-150 active:scale-95 ${
                   active
                     ? "border border-[#D4AF37]/50 bg-[#00213B] font-bold text-white"
-                    : "border border-transparent bg-white/80 font-medium text-[#00213B] hover:bg-white"
+                    : "border border-transparent bg-[#F9F8F3] font-medium text-[#00213B] hover:bg-white"
                 }`}
               >
                 {s.short}
@@ -1052,7 +1057,11 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
           onClick={() => setBudgetOpen(true)}
           aria-haspopup="dialog"
           aria-label={maxPrice === null ? "Set maximum price" : `Maximum price ${formatPrice(maxPrice)}. Change`}
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--surface)] text-[var(--gold-ink)] transition-[background-color,transform] duration-150 hover:bg-[var(--press)] active:scale-95"
+          className={`grid h-9 w-9 shrink-0 place-items-center rounded-full transition-[background-color,color,transform] duration-150 active:scale-95 ${
+            hasActivePriceFilter
+              ? "border-2 border-[#D4AF37] bg-[#00213B] text-[#D4AF37]"
+              : "bg-[var(--surface)] text-[var(--gold-ink)] hover:bg-[var(--press)]"
+          }`}
         >
           <SlidersHorizontal size={16} strokeWidth={2.4} aria-hidden="true" />
         </button>
@@ -1081,30 +1090,42 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
             <p className="tabular mb-4 text-[13px] text-[var(--muted)]" aria-live="polite">{countLabel}</p>
           </div>
         )}
-        {hasActivePriceFilter && (
-          <div className="mb-2 mt-3 flex w-fit items-center overflow-hidden rounded-full border border-[rgba(212,175,55,0.65)] bg-[var(--gold-soft)] text-[var(--ink)]">
-            <button
-              type="button"
-              onClick={() => setBudgetOpen(true)}
-              aria-label={`Maximum price ${formatPrice(maxPrice)}. Change filter`}
-              className="px-3 py-1.5 text-[13px] font-semibold transition-colors hover:bg-[var(--gold)]"
+        <AnimatePresence initial={false}>
+          {hasActivePriceFilter && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              className="mb-1 mt-2 flex w-fit items-center gap-2 rounded-full border border-[#D4AF37]/50 bg-[#F9F8F3] px-3 py-1 text-xs text-[#00213B]/70 shadow-sm"
             >
-              <span className="text-[var(--muted)]">Max Price:</span>{" "}
-              <span className="tabular">{formatPrice(maxPrice)}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => changeBudget(null)}
-              aria-label="Clear maximum price filter"
-              className="grid h-8 w-8 shrink-0 place-items-center border-l border-[rgba(212,175,55,0.45)] bg-[rgba(212,175,55,0.12)] text-[var(--blue-ink)] transition-colors hover:bg-[var(--gold)]"
-            >
-              <X size={14} strokeWidth={2.5} aria-hidden="true" />
-            </button>
-          </div>
-        )}
+              <button
+                type="button"
+                onClick={() => setBudgetOpen(true)}
+                aria-label={`Maximum price ${formatPrice(maxPrice)}. Change filter`}
+                className="flex items-center gap-1.5"
+              >
+                <span className="font-medium text-[#00213B]/60">Max Price:</span>
+                <span className="tabular font-bold text-[#00213B]">{formatPrice(maxPrice)}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => changeBudget(null)}
+                aria-label="Clear maximum price filter"
+                className="ml-1 grid h-5 w-5 shrink-0 place-items-center text-xs text-[#00213B]/50 transition-colors hover:text-[#00213B]"
+              >
+                <X size={14} strokeWidth={2.5} aria-hidden="true" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
         {visible.length ? (
           <>
-            <ul className="h-group mt-1 border border-[#D4AF37]/30">
+            <motion.ul
+              layout
+              transition={{ layout: { duration: 0.3, ease: "easeInOut" } }}
+              className="mt-1 divide-y divide-[#D4AF37]/25 overflow-hidden rounded-xl border-2 border-[#D4AF37]/60 !bg-[#F9F8F3] shadow-sm transition-all duration-300 ease-in-out"
+            >
               <AnimatePresence initial={false} mode="popLayout">
                 {shown.map((r) =>
                   isVendorView ? (
@@ -1132,7 +1153,7 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
                   )
                 )}
               </AnimatePresence>
-            </ul>
+            </motion.ul>
             <div className="mt-5 flex flex-col items-center gap-2.5">
               <p className="f-eyebrow tabular text-[var(--muted)]">
                 Showing {shown.length} of {visible.length}
@@ -1141,15 +1162,15 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
                 <button
                   type="button"
                   onClick={() => setLimit(shown.length + PAGE_SIZE)}
-                  className="f-display tabular h-11 rounded-full border border-[#D4AF37]/50 bg-[#00213B] px-6 text-[17px] font-bold uppercase tracking-[.06em] text-white transition-all duration-150 hover:bg-[#00213B]/90 active:scale-[0.98]"
+                  className="bg-[#00213B] px-8 py-3.5 text-sm font-black uppercase tracking-wider text-[#F9F8F3] rounded-full shadow-md transition-all hover:bg-[#00182C] active:scale-95"
                 >
-                  Show {Math.min(PAGE_SIZE, remaining)} more
+                  Show more
                 </button>
               )}
             </div>
           </>
         ) : (
-          <div className="mt-6 flex flex-col items-center rounded-[22px] bg-[var(--surface)] px-6 pb-8 pt-7 text-center">
+          <div className="mt-6 flex flex-col items-center rounded-xl bg-[#F9F8F3] px-6 pb-8 pt-7 text-center">
             <MugMark />
             <p className="f-display mt-3 text-[24px] font-extrabold uppercase leading-tight">
               Nothing at {formatPrice(maxPrice ?? 0)} or less
@@ -1193,37 +1214,38 @@ function AboutScreen({ onBack }) {
     ["5", "Select a vendor to see more information"],
   ];
   const Heading = ({ children }) => (
-    <h2 className="f-display flex items-center gap-2 text-[20px] font-extrabold uppercase tracking-[.03em]">
-      <span aria-hidden="true" className="h-[3px] w-4 rounded-full bg-[var(--gold)]" />
+    <h2 className="text-[#00213B] font-black text-xs uppercase tracking-wider mb-2 flex items-center gap-1.5">
+      <span className="text-[#D4AF37] font-extrabold">—</span>
+      {" "}
       {children}
     </h2>
   );
   return (
     <ScrollArea label="About Hermes">
-      <article className="flex max-w-prose flex-col gap-7 pt-5 text-[16px] leading-relaxed">
-        <div className="flex items-center gap-2">
+      <article className="mx-auto flex w-full max-w-prose flex-col space-y-3 bg-[#F9F8F3] px-5 pb-8 text-[16px] leading-relaxed">
+        <div className="flex items-center gap-2 pt-8 pb-1 mb-2">
           <button
             type="button"
             onClick={onBack}
             aria-label="Back"
-            className="-ml-2 grid h-10 w-10 place-items-center rounded-full text-[var(--blue-ink)] transition-[background-color,transform] hover:bg-[var(--press)] active:scale-90"
+            className="p-1 text-[#00213B] hover:opacity-80 transition-opacity"
           >
-            <ArrowLeft size={22} strokeWidth={2.4} />
+            <ChevronLeftIcon className="w-5 h-5" />
           </button>
-          <h1 className="f-display text-[32px] font-extrabold uppercase leading-none">
-            About <span className="f-gothic normal-case text-[var(--blue-ink)]">Hermes</span>
+          <h1 className="text-[#00213B] font-black text-xl uppercase tracking-wide flex items-center gap-1.5">
+            ABOUT <span className="font-serif font-bold text-xl lowercase first-letter:uppercase">Hermes</span>
           </h1>
         </div>
-        <section>
-          <p className="f-eyebrow text-[var(--gold-ink)]">Find prices at Oktoberfest</p>
-          <p className="mt-2">Hermes helps you compare prices for drinks, food, rides, games and souvenirs at Oktoberfest.</p>
+        <section className="bg-[#F9F8F3] border border-[#D4AF37]/30 rounded-xl p-3.5 shadow-sm">
+          <Heading>FIND PRICES</Heading>
+          <p className="mt-1 text-xs text-[#00213B]/80 leading-relaxed">Hermes helps you compare prices for drinks, food, rides, games and souvenirs at Oktoberfest.</p>
         </section>
-        <section>
-          <Heading>How it works</Heading>
-          <ol className="h-group mt-3">
+        <section className="bg-[#F9F8F3] border border-[#D4AF37]/30 rounded-xl p-3.5 shadow-sm">
+          <Heading>HOW IT WORKS</Heading>
+          <ol className="space-y-1.5">
             {steps.map(([n, text]) => (
-              <li key={text} className="flex items-center gap-3 px-4 py-3">
-                <span className="f-display grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[var(--blue)] text-[15px] font-bold text-[var(--on-blue)]">
+              <li key={text} className="flex items-center gap-3 rounded-xl border border-[#D4AF37]/30 bg-white/50 px-3 py-2.5 text-sm text-[#00213B]">
+                <span className="bg-[#00213B] text-white font-bold w-6 h-6 rounded-full flex items-center justify-center text-xs flex-shrink-0">
                   {n}
                 </span>
                 {text}
@@ -1231,16 +1253,18 @@ function AboutScreen({ onBack }) {
             ))}
           </ol>
         </section>
-        <section>
-          <Heading>About prices</Heading>
-          <p className="mt-2">
+        <section className="bg-[#F9F8F3] border border-[#D4AF37]/30 rounded-xl p-3.5 shadow-sm">
+          <Heading>ABOUT PRICES</Heading>
+          <p className="mt-1 text-xs text-[#00213B]/80 leading-relaxed">
             Prices are based on the data provided for the Oktoberfest. Prices may change. In this prototype they are
             sample prices in line with recent Wiesn ranges, for example €14.50–€15.80 for a Maß of Festbier.
           </p>
         </section>
-        <section>
-          <Heading>Data</Heading>
-          <p className="mt-2">Last updated: Sept 2026 (sample data for this prototype)</p>
+        <section className="bg-[#F9F8F3] border border-[#D4AF37]/30 rounded-xl p-3.5 shadow-sm">
+          <Heading>DATA</Heading>
+          <p className="mt-1 text-xs text-[#00213B]/80 leading-relaxed">
+            Last updated: Sept 2026 (sample data for this prototype)
+          </p>
         </section>
       </article>
     </ScrollArea>
