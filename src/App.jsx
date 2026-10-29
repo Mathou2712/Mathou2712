@@ -17,41 +17,22 @@ import logo from "../public/oktoberfest-logo.png";
 const RAUTEN =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='20'%3E%3Cpath d='M6 0L12 10L6 20L0 10Z' fill='%23005293'/%3E%3C/svg%3E\")";
 
-// Fine paper grain for the parchment background
-const GRAIN =
-  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.04 0 0 0 0 0.09 0 0 0 0 0.18 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
-
+// The palette is light-only: cream page, navy ink, gold accents. Every tint below derives from those three.
 const THEME_CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800&family=Grenze+Gotisch:wght@700&display=swap');
 :root{
-  --bg:#F4F1EA; --surface:#FBF9F4; --press:#F0E9DF; --ink:#0A192F; --muted:#5B6578; --hair:rgba(10,25,47,.12);
-  --blue:#005293; --sky:#0066B3; --blue-ink:#005293; --blue-soft:#EAF1F8; --on-blue:#FBF9F4;
-  --gold:#D4AF37; --gold-deep:#B98C1F; --gold-soft:#F5E8B9; --gold-ink:#785514; --on-gold:#0A192F;
-  --danger:#A3261C; --scrim:rgba(10,25,47,.5);
+  --bg:#F9F8F3; --surface:#FFFFFF; --press:rgba(212,175,55,.12); --ink:#00213B; --muted:rgba(0,33,59,.68); --hair:rgba(0,33,59,.12);
+  --gold:#D4AF37; --gold-deep:#B8962E; --gold-ink:#B8962E; --on-gold:#00213B;
+  --danger:#A3261C;
   --hh:calc(60px + env(safe-area-inset-top,0px));
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#0A192F; --surface:#112443; --press:#18305A; --ink:#F4F1EA; --muted:#9DA9BC; --hair:rgba(244,241,234,.12);
-    --blue:#3D8BD6; --sky:#5AA2E6; --blue-ink:#8CC0F0; --blue-soft:#163257; --on-blue:#FBF9F4;
-    --gold:#D4AA45; --gold-deep:#E0B957; --gold-soft:#3A2F14; --gold-ink:#E6C46C; --on-gold:#0A192F;
-    --danger:#F2A099; --scrim:rgba(0,0,0,.65);
-    color-scheme:dark;
-  }
-}
-:root[data-theme="dark"]{
-  --bg:#0A192F; --surface:#112443; --press:#18305A; --ink:#F4F1EA; --muted:#9DA9BC; --hair:rgba(244,241,234,.12);
-  --blue:#3D8BD6; --sky:#5AA2E6; --blue-ink:#8CC0F0; --blue-soft:#163257; --on-blue:#FBF9F4;
-  --gold:#D4AA45; --gold-deep:#E0B957; --gold-soft:#3A2F14; --gold-ink:#E6C46C; --on-gold:#0A192F;
-  --danger:#F2A099; --scrim:rgba(0,0,0,.65);
-  color-scheme:dark;
+  color-scheme:light;
 }
 
 /* One-screen app shell: the page never scrolls, only each screen's content area */
 html{box-sizing:border-box;}
 html,body,#root{height:100%;}
 html,body{overflow:hidden;}
-body{background-color:var(--bg);background-image:${GRAIN};color:var(--ink);
+body{background-color:var(--bg);color:var(--ink);
   font-family:'Barlow',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased;}
 h1,h2,h3{text-wrap:balance}
 
@@ -61,23 +42,23 @@ h1,h2,h3{text-wrap:balance}
 .tabular{font-variant-numeric:tabular-nums}
 
 .h-gutter{padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));}
-.h-scroll{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
+.h-scroll{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-gutter:stable both-edges;}
 .h-scroll-pad{padding-bottom:calc(36px + env(safe-area-inset-bottom,0px));}
 .h-scroll-pad-extra{padding-bottom:calc(80px + env(safe-area-inset-bottom,0px));}
 .h-rauten{background-color:#FFFFFF;background-image:${RAUTEN};background-size:12px 20px;}
 
 /* Simple app bars: clean, solid, and practical */
-.h-glass{background:rgba(244,241,234,.98);}
+.h-glass{background:rgba(249,248,243,.98);}
 .h-hairline{box-shadow:0 1px 0 var(--hair);}
 
 /* iOS-style grouped list: one surface, inset hairline dividers */
-.h-group{background:var(--surface);border-radius:18px;overflow:hidden;}
+.h-group{background:var(--surface);border-radius:16px;overflow:hidden;}
 .h-group > li{position:relative;}
 .h-group > li + li::before{content:"";position:absolute;top:0;left:16px;right:0;height:1px;background:var(--hair);z-index:1;}
 
 /* Festival ticket price badge: clear, tactile, and less gimmicky */
 .h-ticket{position:relative;display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px;border-radius:999px;
-  background:#00213B;color:#fff;white-space:nowrap;box-shadow:inset 0 0 0 1px rgba(10,25,47,.12);}
+  background:#00213B;color:#fff;white-space:nowrap;box-shadow:inset 0 0 0 1px rgba(0,33,59,.12);}
 .h-ticket::after{display:none;}
 .h-ticket-best{background:#00213B;color:#D4AF37;box-shadow:inset 0 0 0 1px rgba(212,175,55,.35);}
 .h-ticket-label{font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:700;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;opacity:.8;color:inherit;}
@@ -330,34 +311,36 @@ function MugMark({ size = 72, className = "" }) {
 // Lets the screen below tell the header when content has scrolled under it
 const HeaderLineContext = createContext(() => {});
 
-// `wide` matches Home's max-w-2xl px-4 container so the logo lines up with the page content.
-function Header({ onHome, onInfo, hairline, wide = false }) {
+// Every screen shares one content width so page transitions don't shift the layout.
+const CONTAINER = "mx-auto w-full max-w-2xl px-4";
+
+function Header({ onHome, onInfo, hairline }) {
   return (
     <header
-      className={`absolute inset-x-0 top-0 z-30 bg-[#00213B] text-[#F9F4E5] shadow-[0_8px_18px_rgba(10,25,47,0.18)] transition-shadow ${
-        hairline ? "shadow-[0_8px_18px_rgba(10,25,47,0.18),0_1px_0_rgba(255,255,255,0.16)]" : ""
+      className={`absolute inset-x-0 top-0 z-30 bg-[#00213B] text-[#F9F8F3] shadow-[0_8px_18px_rgba(0,33,59,0.18)] transition-shadow ${
+        hairline ? "shadow-[0_8px_18px_rgba(0,33,59,0.18),0_1px_0_rgba(255,255,255,0.16)]" : ""
       }`}
     >
       <div className="h-rauten h-1.5" aria-hidden="true" />
-      <div className={wide ? "" : "h-gutter"} style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
-        <div className={`mx-auto flex h-[74px] items-center justify-between ${wide ? "max-w-2xl px-4" : "max-w-[560px]"}`}>
+      <div style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
+        <div className={`${CONTAINER} flex h-[74px] items-center justify-between`}>
           <button
             type="button"
             onClick={onHome}
             aria-label="Hermes, go to start"
-            className="flex items-center gap-3 rounded-lg transition-transform active:scale-95"
+            className="flex items-center gap-3 rounded-lg transition-[opacity,transform] hover:opacity-90 active:scale-[0.98]"
           >
             <img src={logo} alt="Hermes Logo" className="mr-3 h-10 w-auto object-contain drop-shadow" />
             <div className="flex flex-col items-start leading-none">
-              <span className="f-display text-[26px] font-extrabold uppercase tracking-[.04em] text-[#F9F4E5]">HERMES</span>
-              <span className="f-eyebrow mt-1 text-[9px] tracking-[0.22em] text-[#F5D880]">OKTOBERFEST PRICES</span>
+              <span className="f-display text-[26px] font-extrabold uppercase tracking-[.04em] text-[#F9F8F3]">HERMES</span>
+              <span className="f-eyebrow mt-1 text-[9px] tracking-[0.22em] text-[#D4AF37]">OKTOBERFEST PRICES</span>
             </div>
           </button>
           <button
             type="button"
             onClick={onInfo}
             aria-label="About Hermes"
-            className="grid h-10 w-10 place-items-center rounded-full border border-[rgba(245,216,128,0.35)] bg-[rgba(255,255,255,0.06)] text-[#F8F0DE] transition-[background-color,transform] hover:bg-[rgba(255,255,255,0.12)] active:scale-90"
+            className="grid h-10 w-10 place-items-center rounded-full border border-[#D4AF37]/40 bg-white/5 text-[#F9F8F3] transition-[background-color,border-color,transform] hover:border-[#D4AF37] hover:bg-[rgba(255,255,255,0.12)] active:scale-90"
           >
             <Info size={20} strokeWidth={2} />
           </button>
@@ -370,8 +353,7 @@ function Header({ onHome, onInfo, hairline, wide = false }) {
 
 // The only scrolling element on a screen. It starts under the header;
 // `pinned` content sticks just below it while the list scrolls underneath.
-// `bare` hands the width container to the screen itself (Home uses its own wider one).
-const ScrollArea = React.forwardRef(function ScrollArea({ label, pinned, children, extraBottomPadding = false, bare = false }, ref) {
+const ScrollArea = React.forwardRef(function ScrollArea({ label, pinned, children, extraBottomPadding = false }, ref) {
   const [scrolled, setScrolled] = useState(false);
   const setHeaderLine = useContext(HeaderLineContext);
 
@@ -391,20 +373,10 @@ const ScrollArea = React.forwardRef(function ScrollArea({ label, pinned, childre
       <div aria-hidden="true" style={{ height: "var(--hh)" }} />
       {pinned && (
         <div className={`h-glass sticky z-10 transition-shadow ${scrolled ? "h-hairline" : ""}`} style={{ top: "var(--hh)" }}>
-          <div className="h-gutter">
-            <div className="mx-auto max-w-[560px] pb-0 pt-0">
-              <div className="pt-2">{pinned}</div>
-            </div>
-          </div>
+          <div className={`${CONTAINER} pt-2`}>{pinned}</div>
         </div>
       )}
-      {bare ? (
-        <div className={`h-scroll-pad${extraBottomPadding ? " h-scroll-pad-extra" : ""}`}>{children}</div>
-      ) : (
-        <div className="h-gutter">
-          <div className={`h-scroll-pad${extraBottomPadding ? " h-scroll-pad-extra" : ""} mx-auto max-w-[560px]`}>{children}</div>
-        </div>
-      )}
+      <div className={`${CONTAINER} h-scroll-pad${extraBottomPadding ? " h-scroll-pad-extra" : ""}`}>{children}</div>
     </div>
   );
 });
@@ -419,7 +391,7 @@ function CategoryIcon({ category, size = "md", useHermesIcon = false }) {
       className={
         useHermesIcon
           ? `flex ${artSize} shrink-0 items-center justify-center`
-          : `relative grid shrink-0 place-items-center overflow-hidden bg-[var(--blue)] text-[#F4E2B0] ${box}`
+          : `relative grid shrink-0 place-items-center overflow-hidden bg-[#00213B] text-[#D4AF37] ${box}`
       }
     >
       {useHermesIcon && art ? (
@@ -439,7 +411,7 @@ function CategoryIcon({ category, size = "md", useHermesIcon = false }) {
 }
 
 function PriceTicket({ price, label, best, vendor = false }) {
-  const vendorClass = `inline-flex min-w-[54px] items-center justify-center gap-1 rounded-xl px-3 py-1 text-xs font-black shadow-sm ${
+  const vendorClass = `inline-flex min-w-[54px] items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-black shadow-sm ${
     best ? "bg-[#D4AF37] text-[#00213B]" : "bg-[#00213B] text-white"
   }`;
   return (
@@ -447,7 +419,7 @@ function PriceTicket({ price, label, best, vendor = false }) {
       className={
         vendor
           ? vendorClass
-          : `h-ticket border ${best ? "h-ticket-best border-[#D4AF37]/60" : "bg-[#00213B] text-white border-[rgba(10,25,47,0.08)]"}`
+          : `h-ticket border ${best ? "h-ticket-best border-[#D4AF37]/60" : "border-[#00213B]/10 bg-[#00213B] text-white"}`
       }
       aria-label={best ? `Best price ${formatPrice(price)}` : undefined}
     >
@@ -515,10 +487,14 @@ function Dropdown({ id, label, value, options, onChange }) {
         aria-activedescendant={open && options[active] ? `${id}-opt-${options[active].id}` : undefined}
         onClick={() => setOpen((o) => !o)}
         onKeyDown={onKeyDown}
-        className="flex w-fit max-w-full items-center gap-2 px-0 py-0 text-left text-[#00213B] transition-[background-color,transform] active:scale-[.98]"
+        className="flex w-fit max-w-full items-center gap-2 px-0 py-0 text-left text-[#00213B] transition-[opacity,transform] hover:opacity-80 active:scale-[0.98]"
       >
         <span className="f-display min-w-0 truncate text-xl font-extrabold uppercase tracking-wide text-[#00213B]">{selected?.label}</span>
-        <motion.span animate={{ rotate: open ? 180 : 0 }} className="ml-2 h-4 w-4 shrink-0 text-[#00213B]/70">
+        <motion.span
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.2, ease: "easeInOut" }}
+          className="ml-2 h-4 w-4 shrink-0 text-[#00213B]/70"
+        >
           <ChevronDown size={16} strokeWidth={2.5} aria-hidden="true" />
         </motion.span>
       </button>
@@ -530,7 +506,7 @@ function Dropdown({ id, label, value, options, onChange }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.98 }}
             transition={{ duration: 0.16 }}
-            className="absolute left-0 top-[calc(100%+8px)] z-30 w-48 max-w-[calc(100vw-36px)] overflow-hidden rounded-xl border-2 border-[#D4AF37] bg-[#F9F8F3] py-2 text-[#00213B] shadow-xl"
+            className="absolute left-0 top-[calc(100%+8px)] z-30 w-48 max-w-[calc(100vw-36px)] overflow-hidden rounded-2xl border-2 border-[#D4AF37] bg-[#F9F8F3] py-2 text-[#00213B] shadow-xl"
           >
             <ul id={`${id}-list`} role="listbox" aria-label={label} className="bg-[#F9F8F3]">
               {options.map((o, i) => {
@@ -571,11 +547,16 @@ function LinkRow({ name, price, onClick, showPrice = true }) {
       <button
         type="button"
         onClick={onClick}
-        className="flex min-h-[58px] w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors active:bg-[var(--press)]"
+        className="group flex min-h-[58px] w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors hover:bg-[#D4AF37]/5 active:bg-[var(--press)]"
       >
         <span className="f-display min-w-0 flex-1 text-[19px] font-semibold leading-tight">{name}</span>
         {priced ? <PriceTicket price={price} label="from" /> : null}
-        <ChevronRight size={18} strokeWidth={2.5} aria-hidden="true" className="-mr-1 shrink-0 text-[var(--muted)]" />
+        <ChevronRight
+          size={18}
+          strokeWidth={2.5}
+          aria-hidden="true"
+          className="-mr-1 shrink-0 text-[var(--muted)] transition-transform duration-200 group-hover:translate-x-0.5"
+        />
       </button>
     </motion.li>
   );
@@ -590,7 +571,9 @@ function ExpandRow({ id, name, price, showFrom, best, type, location, expanded, 
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       data-row={id}
-      className={`overflow-hidden transition-colors ${best ? "border-l-4 border-l-[#D4AF37] bg-[#D4AF37]/5" : "bg-[#F9F8F3]"}`}
+      // The 4px gold accent is reserved for the best price. Open rows stay full width inside the list frame;
+      // only the white details panel below the header marks them as open.
+      className={`relative overflow-hidden ${best ? "border-l-4 !border-l-[#D4AF37] bg-[#D4AF37]/5" : "bg-[#F9F8F3]"}`}
     >
       <button
         type="button"
@@ -598,14 +581,10 @@ function ExpandRow({ id, name, price, showFrom, best, type, location, expanded, 
         aria-expanded={expanded}
         aria-controls={`${id}-details`}
         className={`flex min-h-[58px] w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors active:bg-[var(--press)] ${
-          best ? "bg-[#D4AF37]/5" : "bg-[#F9F8F3]"
+          best ? "bg-[#D4AF37]/5 hover:bg-[#D4AF37]/10" : "bg-[#F9F8F3] hover:bg-[#D4AF37]/5"
         }`}
       >
-        <span
-          className={`f-display min-w-0 flex-1 break-normal hyphens-manual text-[19px] font-semibold leading-tight text-[var(--ink)] ${
-            expanded ? "text-[var(--blue-ink)]" : ""
-          }`}
-        >
+        <span className="f-display min-w-0 flex-1 break-normal hyphens-manual text-[19px] font-semibold leading-tight text-[var(--ink)]">
           {name}
         </span>
         <div className="flex shrink-0 items-center gap-2">
@@ -615,7 +594,11 @@ function ExpandRow({ id, name, price, showFrom, best, type, location, expanded, 
             </span>
           )}
           {priced && <PriceTicket price={price} label={showFrom ? "from" : null} best={best} vendor />}
-          <motion.span animate={{ rotate: expanded ? 180 : 0 }} className="-mr-1 shrink-0 text-[var(--gold-ink)]">
+          <motion.span
+            animate={{ rotate: expanded ? 180 : 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="-mr-1 shrink-0 text-[var(--gold-ink)]"
+          >
             <ChevronDown size={18} strokeWidth={2.5} aria-hidden="true" />
           </motion.span>
         </div>
@@ -628,13 +611,13 @@ function ExpandRow({ id, name, price, showFrom, best, type, location, expanded, 
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="border-t border-[#D4AF37]/30 bg-[#F9F8F3] px-4 pb-4 pt-3"
+            className="border-t border-[#D4AF37]/30 bg-white p-4"
           >
-            <dl className="grid grid-cols-[auto_1fr] items-center gap-x-2.5 gap-y-1.5 text-[15px] text-[var(--ink)]">
-              <Store size={15} aria-hidden="true" className="text-[var(--blue-ink)]" />
+            <dl className="grid grid-cols-[auto_1fr] items-center gap-x-2.5 gap-y-2 text-[15px] text-[#00213B]">
+              <Store size={15} aria-hidden="true" />
               <div><dt className="sr-only">Type</dt><dd>{type}</dd></div>
-              <MapPin size={15} aria-hidden="true" className="text-[var(--blue-ink)]" />
-              <div><dt className="sr-only">Location</dt><dd className="font-semibold text-[var(--ink)]">{location}</dd></div>
+              <MapPin size={15} aria-hidden="true" />
+              <div><dt className="sr-only">Location</dt><dd className="font-semibold">{location}</dd></div>
             </dl>
           </motion.div>
         )}
@@ -645,7 +628,7 @@ function ExpandRow({ id, name, price, showFrom, best, type, location, expanded, 
 
 // Shared pill style for the main navy actions (SHOW RESULTS, SHOW MORE)
 const NAVY_PILL =
-  "bg-[#00213B] px-8 py-3.5 text-sm font-black uppercase tracking-wider text-[#F9F8F3] rounded-full shadow-md transition-all hover:bg-[#00182C] active:scale-95";
+  "bg-[#00213B] px-8 py-3.5 text-sm font-black uppercase tracking-wider text-[#F9F8F3] rounded-full shadow-md transition-all hover:bg-[#00213B]/90 hover:shadow-lg active:scale-[0.98]";
 
 function BudgetPopup({ open, max, value, onClose, onApply }) {
   const [draft, setDraft] = useState(value ?? max);
@@ -744,11 +727,11 @@ function BudgetPopup({ open, max, value, onClose, onApply }) {
             <div className="tabular mt-4 flex items-center justify-between gap-3 text-[15px] font-semibold text-[#00213B]/70">
               <span>€0</span>
               <span
-                className={`rounded-xl p-[1px] transition-shadow ${
+                className={`rounded-full p-[1px] transition-shadow ${
                   outOfRange ? "shadow-[0_0_0_2px_var(--danger)]" : "focus-within:shadow-[0_0_0_2px_rgba(212,175,55,0.28)]"
                 }`}
               >
-                <label className="flex cursor-text items-center justify-center gap-1 rounded-xl border-2 border-[#D4AF37]/50 bg-white px-4 py-2 text-[#00213B] transition-colors focus-within:border-[#D4AF37] focus-within:ring-2 focus-within:ring-[#D4AF37]/20 focus-within:outline-none">
+                <label className="flex cursor-text items-center justify-center gap-1 rounded-full border-2 border-[#D4AF37]/50 bg-white px-4 py-2 text-[#00213B] transition-colors hover:border-[#D4AF37] focus-within:border-[#D4AF37] focus-within:ring-2 focus-within:ring-[#D4AF37]/20 focus-within:outline-none">
                   <span aria-hidden="true" className="text-xl font-black text-[#00213B]">€</span>
                   <input
                     id="budget-input"
@@ -761,7 +744,7 @@ function BudgetPopup({ open, max, value, onClose, onApply }) {
                     value={text}
                     onChange={(e) => onType(e.target.value)}
                     onBlur={() => setText(formatInput(draft))}
-                    className="tabular w-16 min-w-0 border-0 bg-transparent text-center text-xl font-black text-[#00213B] placeholder:text-slate-400 focus:outline-none"
+                    className="tabular w-16 min-w-0 border-0 bg-transparent text-center text-xl font-black text-[#00213B] placeholder:text-[#00213B]/40 focus:outline-none"
                   />
                 </label>
               </span>
@@ -784,7 +767,7 @@ function BudgetPopup({ open, max, value, onClose, onApply }) {
               <button
                 type="button"
                 onClick={() => onApply(null)}
-                className="mx-auto mt-3 block rounded-md px-2 text-xs font-bold text-[#00213B]/70 underline underline-offset-4 transition-colors hover:text-[#00213B]"
+                className="mx-auto mt-3 block rounded-md px-2 text-xs font-bold text-[#00213B]/70 underline underline-offset-4 transition-[color,transform] hover:text-[#00213B] active:scale-[0.98]"
               >
                 Remove price limit
               </button>
@@ -808,13 +791,12 @@ function HomeScreen({ onOpenCategory, onOpenItem }) {
   const matches = q ? SEARCH_INDEX.filter((e) => e.haystack.includes(q)) : [];
 
   return (
-    <ScrollArea label="Start" bare>
-      <div className="mx-auto w-full max-w-2xl px-4">
+    <ScrollArea label="Start">
       <section className="pt-9">
         <p className="f-eyebrow text-[var(--gold-ink)]">Theresienwiese · München</p>
         <h1 className="f-display mt-2 text-[46px] font-extrabold uppercase leading-[.88] tracking-[-.005em]">
           Find the best prices at
-          <span className="f-gothic mt-1 block text-[1.02em] normal-case leading-[1] tracking-normal text-[var(--blue-ink)]">
+          <span className="f-gothic mt-1 block text-[1.02em] normal-case leading-[1] tracking-normal text-[#00213B]">
             Oktoberfest
           </span>
         </h1>
@@ -841,7 +823,7 @@ function HomeScreen({ onOpenCategory, onOpenItem }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={SEARCH_HINT}
-          className="h-[52px] w-full rounded-2xl border border-[#D4AF37]/40 bg-[var(--surface)] p-4 pl-11 pr-11 text-[14px] leading-5 text-[var(--ink)] shadow-sm placeholder:text-[var(--muted)] sm:text-[16px] focus:outline-none focus-visible:outline-2 focus-visible:outline-[var(--gold)]"
+          className="h-[52px] w-full rounded-full border border-[#D4AF37]/40 bg-[var(--surface)] transition-colors hover:border-[#D4AF37] focus:border-[#D4AF37] p-4 pl-11 pr-11 text-[14px] leading-5 text-[var(--ink)] shadow-sm placeholder:text-[var(--muted)] sm:text-[16px] focus:outline-none focus-visible:outline-2 focus-visible:outline-[var(--gold)]"
         />
         {query && (
           <button
@@ -860,7 +842,7 @@ function HomeScreen({ onOpenCategory, onOpenItem }) {
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
-              className="absolute inset-x-0 top-[60px] z-10 max-h-[min(60vh,420px)] overflow-y-auto rounded-[18px] bg-[var(--surface)] shadow-[0_12px_28px_-12px_rgba(10,25,47,.28)]"
+              className="absolute inset-x-0 top-[60px] z-10 max-h-[min(60vh,420px)] overflow-y-auto rounded-2xl border border-[#D4AF37]/40 bg-[var(--surface)] shadow-[0_12px_28px_-12px_rgba(10,25,47,.28)]"
             >
               {matches.length ? (
                 <ul aria-label="Search results" className="h-group rounded-none">
@@ -869,7 +851,7 @@ function HomeScreen({ onOpenCategory, onOpenItem }) {
                       <button
                         type="button"
                         onClick={() => onOpenItem(m)}
-                        className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors active:bg-[var(--press)]"
+                        className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-[#D4AF37]/5 active:bg-[var(--press)]"
                       >
                         <CategoryIcon category={CATEGORY_BY_ID[m.category]} size="sm" />
                         <span className="min-w-0 flex-1">
@@ -935,7 +917,6 @@ function HomeScreen({ onOpenCategory, onOpenItem }) {
       <div className="mt-6 flex items-center justify-center gap-2 text-[13px] text-[var(--muted)]">
         <PretzelMark size={18} className="text-[var(--gold)]" />
         Sample prices in line with recent Wiesn ranges
-      </div>
       </div>
     </ScrollArea>
   );
@@ -1023,7 +1004,7 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
           type="button"
           onClick={onBack}
           aria-label={product ? `Back to ${sub.id === "all" ? cat.label : sub.label} list` : "Back to start"}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg p-2 text-xl font-bold text-[#00213B] transition-[background-color,transform] hover:bg-black/5 active:scale-95"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full p-2 text-xl font-bold text-[#00213B] transition-[background-color,transform] hover:bg-[#00213B]/5 active:scale-95"
         >
           <ArrowLeft size={24} strokeWidth={2.4} />
         </button>
@@ -1049,10 +1030,11 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
                 role="radio"
                 aria-checked={active}
                 onClick={() => !active && onNavigate({ category: categoryId, sub: s.id, item: null })}
-                className={`h-9 shrink-0 rounded-full px-3 text-[14px] font-semibold transition-[background-color,color,transform] duration-150 active:scale-95 ${
+                // The active chip's 2px border takes 1px from each side's padding so chips don't change width
+                className={`h-9 shrink-0 rounded-full text-[14px] transition-[background-color,border-color,color,transform] duration-150 active:scale-95 ${
                   active
-                    ? "border border-[#D4AF37]/50 bg-[#00213B] font-bold text-white"
-                    : "border border-transparent bg-[#F9F8F3] font-medium text-[#00213B] hover:bg-white"
+                    ? "border-2 border-[#D4AF37] bg-white px-[11px] font-semibold text-[#B8962E] shadow-sm"
+                    : "border border-[#D4AF37]/30 bg-white/80 px-3 font-medium text-[#00213B]/80 hover:border-[#D4AF37]"
                 }`}
               >
                 {s.short}
@@ -1106,13 +1088,13 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2, ease: "easeInOut" }}
-              className="mb-4 mt-2 flex w-fit items-center gap-2 rounded-full border border-[#D4AF37]/50 bg-[#F9F8F3] px-3 py-1 text-xs text-[#00213B]/70 shadow-sm"
+              className="mb-4 mt-2 flex w-fit items-center gap-2 rounded-full border border-[#D4AF37]/50 bg-[#F9F8F3] px-3 py-1 text-xs text-[#00213B]/70 shadow-sm transition-colors hover:border-[#D4AF37]"
             >
               <button
                 type="button"
                 onClick={() => setBudgetOpen(true)}
                 aria-label={`Maximum price ${formatPrice(maxPrice)}. Change filter`}
-                className="flex items-center gap-1.5"
+                className="flex items-center gap-1.5 transition-transform active:scale-[0.98]"
               >
                 <span className="font-medium text-[#00213B]/60">Max Price:</span>
                 <span className="tabular font-bold text-[#00213B]">{formatPrice(maxPrice)}</span>
@@ -1121,7 +1103,7 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
                 type="button"
                 onClick={() => changeBudget(null)}
                 aria-label="Clear maximum price filter"
-                className="ml-1 grid h-5 w-5 shrink-0 place-items-center text-xs text-[#00213B]/50 transition-colors hover:text-[#00213B]"
+                className="ml-1 grid h-5 w-5 shrink-0 place-items-center text-xs text-[#00213B]/50 transition-[color,transform] hover:text-[#00213B] active:scale-90"
               >
                 <X size={14} strokeWidth={2.5} aria-hidden="true" />
               </button>
@@ -1134,7 +1116,7 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
             <motion.ul
               layout
               transition={{ layout: { duration: 0.3, ease: "easeInOut" } }}
-              className="mt-1 divide-y divide-[#D4AF37]/25 overflow-hidden rounded-xl border-2 border-[#D4AF37]/60 !bg-[#F9F8F3] shadow-sm transition-all duration-300 ease-in-out"
+              className="mt-1 divide-y divide-[#D4AF37]/25 overflow-hidden rounded-2xl border border-[#D4AF37]/40 !bg-[#F9F8F3] shadow-sm transition-all duration-300 ease-in-out"
             >
               <AnimatePresence initial={false} mode="popLayout">
                 {shown.map((r) =>
@@ -1176,7 +1158,7 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
             </div>
           </>
         ) : (
-          <div className="mt-6 flex flex-col items-center rounded-xl bg-[#F9F8F3] px-6 pb-8 pt-7 text-center">
+          <div className="mt-6 flex flex-col items-center rounded-2xl border border-[#D4AF37]/40 bg-[#F9F8F3] px-6 pb-8 pt-7 text-center shadow-sm">
             <MugMark />
             <p className="f-display mt-3 text-[24px] font-extrabold uppercase leading-tight">
               Nothing at {formatPrice(maxPrice ?? 0)} or less
@@ -1227,13 +1209,13 @@ function AboutScreen({ onBack }) {
   const CARD = "mb-4 rounded-2xl border border-[#D4AF37]/40 bg-[#F9F8F3] p-4 shadow-sm";
   return (
     <ScrollArea label="About Hermes">
-      <article className="mx-auto flex w-full max-w-prose flex-col px-1 pb-8 text-[16px] leading-relaxed">
+      <article className="flex w-full flex-col pb-8 text-[16px] leading-relaxed">
         <div className="mb-5 flex items-center gap-2 pt-14">
           <button
             type="button"
             onClick={onBack}
             aria-label="Back"
-            className="p-1 text-[#00213B] transition-opacity hover:opacity-80"
+            className="rounded-full p-1 text-[#00213B] transition-[background-color,transform] hover:bg-[#00213B]/5 active:scale-95"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -1319,7 +1301,6 @@ export default function App() {
         <div className="relative h-full overflow-hidden text-[var(--ink)]">
           <Header
             hairline={headerLine}
-            wide={view.screen === "home"}
             onHome={() => navigate({ screen: "home" }, -1)}
             onInfo={() => view.screen !== "about" && navigate({ screen: "about", from: view })}
           />
