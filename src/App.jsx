@@ -1,17 +1,16 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
-import logoImg from '../public/oktoberfest-logo.png';
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import {
-  Info, Search, ChevronDown, ChevronRight, ChevronLeft as ChevronLeftIcon, ArrowLeft, ArrowDownAZ, ArrowDownZA, ArrowDown01, ArrowDown10,
-  SlidersHorizontal, X, Beer, UtensilsCrossed, FerrisWheel, Target, Gift, Check, MapPin, Store,
+  Info, Search, ChevronDown, ChevronRight, ChevronLeft, ArrowLeft, ArrowDownAZ, ArrowDownZA, ArrowDown01, ArrowDown10,
+  SlidersHorizontal, X, Beer, UtensilsCrossed, FerrisWheel, Target, Gift, MapPin, Store,
 } from "lucide-react";
+import logo from "../public/oktoberfest-logo.png";
 
 /* ------------------------------------------------------------------ */
-/* Theme — Hermes, a Wiesn price guide.                                 */
-/* Parchment page, midnight-navy ink, Bavarian blue for navigation and  */
-/* deep beer gold for prices, set as festival tickets.                  */
-/* Type: Barlow Condensed for punchy headings and names, Barlow for     */
-/* reading and prices, Grenze Gotisch as the one Bavarian accent.       */
+/* Theme — Hermes, a Wiesn price guide (matches the live Vercel build). */
+/* Navy banner and controls, Oktoberfest gold accents, parchment page.  */
+/* Type: Barlow Condensed for headings and names, Barlow for reading,   */
+/* Grenze Gotisch for the "Oktoberfest" accent.                         */
 /* ------------------------------------------------------------------ */
 
 // Blue-and-white lozenge pattern (Bavarian "Rautenmuster"), used as a thin accent stripe
@@ -143,6 +142,15 @@ const CATEGORIES = [
 ];
 const CATEGORY_BY_ID = Object.fromEntries(CATEGORIES.map((c) => [c.id, c]));
 
+// Category artwork served from /public/icons
+const CATEGORY_ART = {
+  drinks: "/icons/drinks.png",
+  foods: "/icons/foods.png",
+  rides: "/icons/rides.png",
+  games: "/icons/games.png",
+  merch: "/icons/souvenirs.png",
+};
+
 // The 17 festival tents compared for every drink and food — [id, name, type, location]
 const VENDORS = Object.fromEntries(
   [
@@ -186,7 +194,7 @@ function priceList(productId, min, max) {
   return list;
 }
 
-// [id, name, category, sub-category, min €, max €, search aliases]
+// [id, name, category, sub-category, min €, max €, search aliases, quantity]
 const PRODUCTS = [
   ["mass", "Paulaner Helles Maß (1 L)", "drinks", "alcoholic", 14.5, 15.8, ["paulaner", "helles", "mass", "festbier", "beer"], "1 L"],
   ["augustiner-helles", "Augustiner Helles (0.5 L)", "drinks", "alcoholic", 12.9, 14.8, ["augustiner", "helles", "beer", "lager"], "0.5 L"],
@@ -249,15 +257,16 @@ const PAGE_SIZE = 8;
 const fromPrice = (product) => Math.min(...product.prices.map((p) => p.price));
 const formatPrice = (v) => `€${Number.isInteger(v) ? v : v.toFixed(2)}`;
 const formatInput = (v) => (Number.isInteger(v) ? String(v) : v.toFixed(2));
-const hasRenderablePrice = (value) => {
-  if (typeof value === "number") return Number.isFinite(value);
-  if (typeof value === "string") {
-    const text = value.trim();
-    if (!text || text === "null" || text === "undefined") return false;
-    if (/^\[.*\]$/.test(text)) return false;
-    const lower = text.toLowerCase();
+
+// Only real numbers get a price badge; placeholders like "prices vary" are hidden
+const hasPrice = (v) => {
+  if (typeof v === "number") return Number.isFinite(v);
+  if (typeof v === "string") {
+    const s = v.trim();
+    if (!s || s === "null" || s === "undefined" || /^\[.*\]$/.test(s)) return false;
+    const lower = s.toLowerCase();
     if (lower.includes("no price") || lower.includes("prices vary")) return false;
-    return !Number.isNaN(Number.parseFloat(text.replace(",", ".")));
+    return !Number.isNaN(Number.parseFloat(s.replace(",", ".")));
   }
   return false;
 };
@@ -267,20 +276,13 @@ function itemsFor(categoryId, subId) {
   return pool.filter((p) => p.category === categoryId && (subId === "all" || p.sub === subId));
 }
 
-const normalizeSearchText = (value) =>
-  value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+// Accent-insensitive matching, so "weissbier" finds "Weißbier" and "kasespatzle" finds "Käsespätzle"
+const normalize = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
 const SEARCH_INDEX = [
-  ...PRODUCTS.map((p) => ({
-    ...p,
-    from: fromPrice(p),
-    terms: [p.name, ...p.aliases, CATEGORY_BY_ID[p.category].label],
-  })),
-  ...PLACES.map((p) => ({
-    ...p,
-    terms: [p.name, p.type, CATEGORY_BY_ID[p.category].label],
-  })),
-].map((e) => ({ ...e, haystack: normalizeSearchText(e.terms.join(" ")) }));
+  ...PRODUCTS.map((p) => ({ ...p, from: fromPrice(p), terms: [p.name, ...p.aliases, CATEGORY_BY_ID[p.category].label] })),
+  ...PLACES.map((p) => ({ ...p, terms: [p.name, p.type, CATEGORY_BY_ID[p.category].label] })),
+].map((e) => ({ ...e, haystack: normalize(e.terms.join(" ")) }));
 
 /* ------------------------------------------------------------------ */
 /* Illustrations                                                        */
@@ -321,42 +323,31 @@ function MugMark({ size = 72, className = "" }) {
   );
 }
 
-function RibbonLogo({ className = "" }) {
-  return (
-    <svg className={className} viewBox="0 0 240 160" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path d="M 20 120 C 0 100, 10 75, 40 85 C 90 100, 160 110, 210 65 C 225 50, 215 35, 190 55 C 160 80, 100 85, 45 60" stroke="url(#oktoberfestGold)" strokeWidth="6" strokeLinecap="round" fill="none" />
-      <path d="M 95 30 C 150 15, 185 45, 175 90 C 165 130, 100 145, 60 120 C 35 105, 45 60, 80 35 C 110 15, 160 30, 170 70 C 180 110, 130 135, 75 125" fill="url(#oktoberfestGold)" />
-      <defs>
-        <linearGradient id="oktoberfestGold" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#FFC700" />
-          <stop offset="50%" stopColor="#E69A00" />
-          <stop offset="100%" stopColor="#B36B00" />
-        </linearGradient>
-      </defs>
-    </svg>
-  );
-}
-
 /* ------------------------------------------------------------------ */
 /* Building blocks                                                      */
 /* ------------------------------------------------------------------ */
 
-// Lets the screen below tell the frosted header when content has scrolled under it
+// Lets the screen below tell the header when content has scrolled under it
 const HeaderLineContext = createContext(() => {});
 
-function Header({ onHome, onInfo, hairline }) {
+// `wide` matches Home's max-w-2xl px-4 container so the logo lines up with the page content.
+function Header({ onHome, onInfo, hairline, wide = false }) {
   return (
-    <header className={`absolute inset-x-0 top-0 z-30 bg-[#0A234D] text-[#F9F4E5] shadow-[0_8px_18px_rgba(10,25,47,0.18)] transition-shadow ${hairline ? "shadow-[0_8px_18px_rgba(10,25,47,0.18),0_1px_0_rgba(255,255,255,0.16)]" : ""}`}>
+    <header
+      className={`absolute inset-x-0 top-0 z-30 bg-[#00213B] text-[#F9F4E5] shadow-[0_8px_18px_rgba(10,25,47,0.18)] transition-shadow ${
+        hairline ? "shadow-[0_8px_18px_rgba(10,25,47,0.18),0_1px_0_rgba(255,255,255,0.16)]" : ""
+      }`}
+    >
       <div className="h-rauten h-1.5" aria-hidden="true" />
-      <div className="h-gutter" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
-        <div className="mx-auto flex h-[74px] max-w-[560px] items-center justify-between">
+      <div className={wide ? "" : "h-gutter"} style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
+        <div className={`mx-auto flex h-[74px] items-center justify-between ${wide ? "max-w-2xl px-4" : "max-w-[560px]"}`}>
           <button
             type="button"
             onClick={onHome}
             aria-label="Hermes, go to start"
             className="flex items-center gap-3 rounded-lg transition-transform active:scale-95"
           >
-            <img src={logoImg} alt="Hermes Logo" className="mr-3 h-10 w-auto object-contain drop-shadow" />
+            <img src={logo} alt="Hermes Logo" className="mr-3 h-10 w-auto object-contain drop-shadow" />
             <div className="flex flex-col items-start leading-none">
               <span className="f-display text-[26px] font-extrabold uppercase tracking-[.04em] text-[#F9F4E5]">HERMES</span>
               <span className="f-eyebrow mt-1 text-[9px] tracking-[0.22em] text-[#F5D880]">OKTOBERFEST PRICES</span>
@@ -377,9 +368,10 @@ function Header({ onHome, onInfo, hairline }) {
   );
 }
 
-// The only scrolling element on a screen. It starts under the frosted header;
-// `pinned` content sticks just below the header and the list slides under both.
-const ScrollArea = React.forwardRef(function ScrollArea({ label, pinned, children, extraBottomPadding = false }, ref) {
+// The only scrolling element on a screen. It starts under the header;
+// `pinned` content sticks just below it while the list scrolls underneath.
+// `bare` hands the width container to the screen itself (Home uses its own wider one).
+const ScrollArea = React.forwardRef(function ScrollArea({ label, pinned, children, extraBottomPadding = false, bare = false }, ref) {
   const [scrolled, setScrolled] = useState(false);
   const setHeaderLine = useContext(HeaderLineContext);
 
@@ -398,10 +390,7 @@ const ScrollArea = React.forwardRef(function ScrollArea({ label, pinned, childre
     <div ref={ref} onScroll={onScroll} role="region" aria-label={label} tabIndex={0} className="h-scroll min-h-0 flex-1 focus:outline-none">
       <div aria-hidden="true" style={{ height: "var(--hh)" }} />
       {pinned && (
-        <div
-          className={`h-glass sticky z-10 transition-shadow ${scrolled ? "h-hairline" : ""}`}
-          style={{ top: "var(--hh)" }}
-        >
+        <div className={`h-glass sticky z-10 transition-shadow ${scrolled ? "h-hairline" : ""}`} style={{ top: "var(--hh)" }}>
           <div className="h-gutter">
             <div className="mx-auto max-w-[560px] pb-0 pt-0">
               <div className="pt-2">{pinned}</div>
@@ -409,39 +398,38 @@ const ScrollArea = React.forwardRef(function ScrollArea({ label, pinned, childre
           </div>
         </div>
       )}
-      <div className="h-gutter">
-        <div className={`h-scroll-pad${extraBottomPadding ? " h-scroll-pad-extra" : ""} mx-auto max-w-[560px]`}>{children}</div>
-      </div>
+      {bare ? (
+        <div className={`h-scroll-pad${extraBottomPadding ? " h-scroll-pad-extra" : ""}`}>{children}</div>
+      ) : (
+        <div className="h-gutter">
+          <div className={`h-scroll-pad${extraBottomPadding ? " h-scroll-pad-extra" : ""} mx-auto max-w-[560px]`}>{children}</div>
+        </div>
+      )}
     </div>
   );
 });
 
-const CATEGORY_ICON_PATHS = {
-  drinks: "/icons/drinks.png",
-  foods: "/icons/foods.png",
-  rides: "/icons/rides.png",
-  games: "/icons/games.png",
-  merch: "/icons/souvenirs.png",
-};
-
 function CategoryIcon({ category, size = "md", useHermesIcon = false }) {
   const Icon = category.icon;
   const box = size === "sm" ? "h-7 w-7 rounded-[9px]" : "h-10 w-10 rounded-[12px]";
-  const iconSize = size === "menu" || size === "banner" ? "h-8 w-8" : "h-10 w-10";
-  const iconBox = useHermesIcon
-    ? `flex ${iconSize} shrink-0 items-center justify-center`
-    : `relative grid shrink-0 place-items-center overflow-hidden bg-[var(--blue)] text-[#F4E2B0] ${box}`;
-  const hermesIcon = CATEGORY_ICON_PATHS[category.id];
+  const artSize = size === "menu" || size === "banner" ? "h-8 w-8" : "h-10 w-10";
+  const art = CATEGORY_ART[category.id];
   return (
-    <span className={iconBox}>
-      {useHermesIcon && hermesIcon ? (
+    <span
+      className={
+        useHermesIcon
+          ? `flex ${artSize} shrink-0 items-center justify-center`
+          : `relative grid shrink-0 place-items-center overflow-hidden bg-[var(--blue)] text-[#F4E2B0] ${box}`
+      }
+    >
+      {useHermesIcon && art ? (
         <img
-          src={hermesIcon}
+          src={art}
           alt={category.label}
           onError={(e) => {
             e.currentTarget.style.display = "none";
           }}
-          className={`${iconSize} scale-[1.35] object-contain drop-shadow-sm`}
+          className={`${artSize} scale-[1.35] object-contain drop-shadow-sm`}
         />
       ) : (
         <Icon size={size === "sm" ? 15 : 20} strokeWidth={2.1} />
@@ -451,13 +439,16 @@ function CategoryIcon({ category, size = "md", useHermesIcon = false }) {
 }
 
 function PriceTicket({ price, label, best, vendor = false }) {
-  const vendorPriceClass = `inline-flex min-w-[54px] items-center justify-center gap-1 rounded-xl px-3 py-1 text-xs font-black shadow-sm ${
+  const vendorClass = `inline-flex min-w-[54px] items-center justify-center gap-1 rounded-xl px-3 py-1 text-xs font-black shadow-sm ${
     best ? "bg-[#D4AF37] text-[#00213B]" : "bg-[#00213B] text-white"
   }`;
-
   return (
     <span
-      className={vendor ? vendorPriceClass : `h-ticket border ${best ? "h-ticket-best border-[#D4AF37]/60" : "bg-[#00213B] text-white border-[rgba(10,25,47,0.08)]"}`}
+      className={
+        vendor
+          ? vendorClass
+          : `h-ticket border ${best ? "h-ticket-best border-[#D4AF37]/60" : "bg-[#00213B] text-white border-[rgba(10,25,47,0.08)]"}`
+      }
       aria-label={best ? `Best price ${formatPrice(price)}` : undefined}
     >
       {label && label !== "Best" && <span className={vendor ? "text-[9px] font-bold uppercase opacity-80" : "h-ticket-label"}>{label}</span>}
@@ -466,7 +457,7 @@ function PriceTicket({ price, label, best, vendor = false }) {
   );
 }
 
-// Category selector with a compact, keyboard-navigable option list
+// Category switcher: the category name as an inline title that opens a compact gold-framed menu
 function Dropdown({ id, label, value, options, onChange }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -552,10 +543,16 @@ function Dropdown({ id, label, value, options, onChange }) {
                     aria-selected={isSelected}
                     onMouseEnter={() => setActive(i)}
                     onClick={() => choose(o)}
-                    className={`mx-1 my-0.5 flex cursor-pointer items-center rounded-lg px-3 py-2 text-[#00213B] transition-colors hover:bg-[#D4AF37]/15 ${i === active ? "bg-[#D4AF37]/15" : ""}`}
+                    className={`mx-1 my-0.5 flex cursor-pointer items-center rounded-lg px-3 py-2 text-[#00213B] transition-colors hover:bg-[#D4AF37]/15 ${
+                      i === active ? "bg-[#D4AF37]/15" : ""
+                    }`}
                   >
                     <span className="f-display flex-1 text-sm font-bold text-[#00213B]">{o.label}</span>
-                    {isSelected && <span aria-hidden="true" className="text-[#D4AF37]">✓</span>}
+                    {isSelected && (
+                      <span aria-hidden="true" className="text-[#D4AF37]">
+                        ✓
+                      </span>
+                    )}
                   </li>
                 );
               })}
@@ -568,7 +565,7 @@ function Dropdown({ id, label, value, options, onChange }) {
 }
 
 function LinkRow({ name, price, onClick, showPrice = true }) {
-  const priceIsRenderable = showPrice && hasRenderablePrice(price);
+  const priced = showPrice && hasPrice(price);
   return (
     <motion.li layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
       <button
@@ -577,7 +574,7 @@ function LinkRow({ name, price, onClick, showPrice = true }) {
         className="flex min-h-[58px] w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors active:bg-[var(--press)]"
       >
         <span className="f-display min-w-0 flex-1 text-[19px] font-semibold leading-tight">{name}</span>
-        {priceIsRenderable ? <PriceTicket price={price} label="from" /> : null}
+        {priced ? <PriceTicket price={price} label="from" /> : null}
         <ChevronRight size={18} strokeWidth={2.5} aria-hidden="true" className="-mr-1 shrink-0 text-[var(--muted)]" />
       </button>
     </motion.li>
@@ -585,7 +582,7 @@ function LinkRow({ name, price, onClick, showPrice = true }) {
 }
 
 function ExpandRow({ id, name, price, showFrom, best, type, location, expanded, onToggle, showPrice = true }) {
-  const priceIsRenderable = showPrice && hasRenderablePrice(price);
+  const priced = showPrice && hasPrice(price);
   return (
     <motion.li
       layout
@@ -600,18 +597,24 @@ function ExpandRow({ id, name, price, showFrom, best, type, location, expanded, 
         onClick={onToggle}
         aria-expanded={expanded}
         aria-controls={`${id}-details`}
-        className={`flex min-h-[58px] w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors active:bg-[var(--press)] ${best ? "bg-[#D4AF37]/5" : "bg-[#F9F8F3]"}`}
+        className={`flex min-h-[58px] w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors active:bg-[var(--press)] ${
+          best ? "bg-[#D4AF37]/5" : "bg-[#F9F8F3]"
+        }`}
       >
-        <span className={`f-display min-w-0 flex-1 break-normal hyphens-manual text-[19px] font-semibold leading-tight text-[var(--ink)] ${expanded ? "text-[var(--blue-ink)]" : ""}`}>
+        <span
+          className={`f-display min-w-0 flex-1 break-normal hyphens-manual text-[19px] font-semibold leading-tight text-[var(--ink)] ${
+            expanded ? "text-[var(--blue-ink)]" : ""
+          }`}
+        >
           {name}
         </span>
         <div className="flex shrink-0 items-center gap-2">
-          {priceIsRenderable && best && (
+          {priced && best && (
             <span className="rounded-full bg-[#D4AF37] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#00213B] shadow-sm">
               BEST PRICE
             </span>
           )}
-          {priceIsRenderable && <PriceTicket price={price} label={showFrom ? "from" : null} best={best} vendor />}
+          {priced && <PriceTicket price={price} label={showFrom ? "from" : null} best={best} vendor />}
           <motion.span animate={{ rotate: expanded ? 180 : 0 }} className="-mr-1 shrink-0 text-[var(--gold-ink)]">
             <ChevronDown size={18} strokeWidth={2.5} aria-hidden="true" />
           </motion.span>
@@ -639,6 +642,10 @@ function ExpandRow({ id, name, price, showFrom, best, type, location, expanded, 
     </motion.li>
   );
 }
+
+// Shared pill style for the main navy actions (SHOW RESULTS, SHOW MORE)
+const NAVY_PILL =
+  "bg-[#00213B] px-8 py-3.5 text-sm font-black uppercase tracking-wider text-[#F9F8F3] rounded-full shadow-md transition-all hover:bg-[#00182C] active:scale-95";
 
 function BudgetPopup({ open, max, value, onClose, onApply }) {
   const [draft, setDraft] = useState(value ?? max);
@@ -736,28 +743,27 @@ function BudgetPopup({ open, max, value, onClose, onApply }) {
 
             <div className="tabular mt-4 flex items-center justify-between gap-3 text-[15px] font-semibold text-[#00213B]/70">
               <span>€0</span>
-              {/* The ticket's notch mask would clip an outline, so the focus ring sits on this wrapper */}
               <span
                 className={`rounded-xl p-[1px] transition-shadow ${
                   outOfRange ? "shadow-[0_0_0_2px_var(--danger)]" : "focus-within:shadow-[0_0_0_2px_rgba(212,175,55,0.28)]"
                 }`}
               >
-              <label className="flex cursor-text items-center justify-center gap-1 rounded-xl border-2 border-[#D4AF37]/50 bg-white px-4 py-2 text-[#00213B] transition-colors focus-within:border-[#D4AF37] focus-within:ring-2 focus-within:ring-[#D4AF37]/20 focus-within:outline-none">
-                <span aria-hidden="true" className="text-xl font-black text-[#00213B]">€</span>
-                <input
-                  id="budget-input"
-                  type="text"
-                  inputMode="decimal"
-                  autoComplete="off"
-                  aria-label="Maximum price in euros"
-                  aria-describedby="budget-hint"
-                  aria-invalid={outOfRange}
-                  value={text}
-                  onChange={(e) => onType(e.target.value)}
-                  onBlur={() => setText(formatInput(draft))}
-                  className="tabular w-16 min-w-0 border-0 bg-transparent text-center text-xl font-black text-[#00213B] placeholder:text-slate-400 focus:outline-none"
-                />
-              </label>
+                <label className="flex cursor-text items-center justify-center gap-1 rounded-xl border-2 border-[#D4AF37]/50 bg-white px-4 py-2 text-[#00213B] transition-colors focus-within:border-[#D4AF37] focus-within:ring-2 focus-within:ring-[#D4AF37]/20 focus-within:outline-none">
+                  <span aria-hidden="true" className="text-xl font-black text-[#00213B]">€</span>
+                  <input
+                    id="budget-input"
+                    type="text"
+                    inputMode="decimal"
+                    autoComplete="off"
+                    aria-label="Maximum price in euros"
+                    aria-describedby="budget-hint"
+                    aria-invalid={outOfRange}
+                    value={text}
+                    onChange={(e) => onType(e.target.value)}
+                    onBlur={() => setText(formatInput(draft))}
+                    className="tabular w-16 min-w-0 border-0 bg-transparent text-center text-xl font-black text-[#00213B] placeholder:text-slate-400 focus:outline-none"
+                  />
+                </label>
               </span>
               <span>{formatPrice(max)}</span>
             </div>
@@ -770,10 +776,7 @@ function BudgetPopup({ open, max, value, onClose, onApply }) {
             </p>
 
             <div className="mt-5 text-center">
-              <button
-                type="submit"
-                className="bg-[#00213B] px-8 py-3.5 text-sm font-black uppercase tracking-wider text-[#F9F8F3] rounded-full shadow-md transition-all hover:bg-[#00182C] active:scale-95"
-              >
+              <button type="submit" className={NAVY_PILL}>
                 Show results
               </button>
             </div>
@@ -797,14 +800,16 @@ function BudgetPopup({ open, max, value, onClose, onApply }) {
 /* Screens                                                              */
 /* ------------------------------------------------------------------ */
 
+const SEARCH_HINT = "What are you looking for? (e.g. Helles, Brezn, souvenirs)";
+
 function HomeScreen({ onOpenCategory, onOpenItem }) {
   const [query, setQuery] = useState("");
-  const q = normalizeSearchText(query.trim());
+  const q = normalize(query.trim());
   const matches = q ? SEARCH_INDEX.filter((e) => e.haystack.includes(q)) : [];
-  const counts = Object.fromEntries(CATEGORIES.map((c) => [c.id, itemsFor(c.id, "all").length]));
 
   return (
-    <ScrollArea label="Start">
+    <ScrollArea label="Start" bare>
+      <div className="mx-auto w-full max-w-2xl px-4">
       <section className="pt-9">
         <p className="f-eyebrow text-[var(--gold-ink)]">Theresienwiese · München</p>
         <h1 className="f-display mt-2 text-[46px] font-extrabold uppercase leading-[.88] tracking-[-.005em]">
@@ -820,32 +825,30 @@ function HomeScreen({ onOpenCategory, onOpenItem }) {
 
       <form
         role="search"
-        className="relative mx-auto mt-4 w-full max-w-[310px]"
+        className="relative mt-5 w-full"
         onSubmit={(e) => {
           e.preventDefault();
           if (matches[0]) onOpenItem(matches[0]);
         }}
       >
-        <label htmlFor="home-search" className="sr-only">
-          What are you looking for? (e.g. Helles, Brezn, souvenirs)
-        </label>
-        <Search size={19} strokeWidth={2.25} aria-hidden="true" className="pointer-events-none absolute left-4 top-6 -translate-y-1/2 text-[var(--muted)]" />
+        <label htmlFor="home-search" className="sr-only">{SEARCH_HINT}</label>
+        <Search size={19} strokeWidth={2.25} aria-hidden="true" className="pointer-events-none absolute left-4 top-[26px] -translate-y-1/2 text-[var(--muted)]" />
         <input
           id="home-search"
           type="search"
-          aria-label="What are you looking for? (e.g. Helles, Brezn, souvenirs)"
+          aria-label={SEARCH_HINT}
           autoComplete="off"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="What are you looking for? (e.g. Helles, Brezn, souvenirs)"
-          className="h-12 w-full rounded-[14px] bg-[var(--surface)] pl-11 pr-11 text-[14px] text-[var(--ink)] placeholder:text-[var(--muted)] sm:text-[16px] focus:outline-none focus-visible:outline-2 focus-visible:outline-[var(--gold)]"
+          placeholder={SEARCH_HINT}
+          className="h-[52px] w-full rounded-2xl border border-[#D4AF37]/40 bg-[var(--surface)] p-4 pl-11 pr-11 text-[14px] leading-5 text-[var(--ink)] shadow-sm placeholder:text-[var(--muted)] sm:text-[16px] focus:outline-none focus-visible:outline-2 focus-visible:outline-[var(--gold)]"
         />
         {query && (
           <button
             type="button"
             onClick={() => setQuery("")}
             aria-label="Clear search"
-            className="absolute right-2.5 top-6 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-[var(--press)] text-[var(--muted)] transition-transform active:scale-90"
+            className="absolute right-3 top-[26px] grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-[var(--press)] text-[var(--muted)] transition-transform active:scale-90"
           >
             <X size={14} strokeWidth={2.5} />
           </button>
@@ -857,7 +860,7 @@ function HomeScreen({ onOpenCategory, onOpenItem }) {
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
-              className="absolute inset-x-0 top-[56px] z-10 max-h-[min(60vh,420px)] overflow-y-auto rounded-[18px] bg-[var(--surface)] shadow-[0_12px_28px_-12px_rgba(10,25,47,.28)]"
+              className="absolute inset-x-0 top-[60px] z-10 max-h-[min(60vh,420px)] overflow-y-auto rounded-[18px] bg-[var(--surface)] shadow-[0_12px_28px_-12px_rgba(10,25,47,.28)]"
             >
               {matches.length ? (
                 <ul aria-label="Search results" className="h-group rounded-none">
@@ -873,7 +876,7 @@ function HomeScreen({ onOpenCategory, onOpenItem }) {
                           <span className="f-display block truncate text-[18px] font-semibold leading-tight">{m.name}</span>
                           <span className="block text-[13px] text-[var(--muted)]">{CATEGORY_BY_ID[m.category].label}</span>
                         </span>
-                        {m.category !== "merch" && hasRenderablePrice(m.from) ? <PriceTicket price={m.from} label="from" /> : null}
+                        {m.category !== "merch" && hasPrice(m.from) ? <PriceTicket price={m.from} label="from" /> : null}
                       </button>
                     </li>
                   ))}
@@ -891,23 +894,21 @@ function HomeScreen({ onOpenCategory, onOpenItem }) {
         </AnimatePresence>
       </form>
 
-      <div className="mx-auto mt-6 w-full max-w-[310px]">
+      <div className="mt-6 w-full">
         <h2 className="f-eyebrow mb-2 text-[var(--muted)]">Browse the Wiesn</h2>
         <nav aria-label="Categories">
-          <ul className="flex flex-col gap-2">
-          {CATEGORIES.map((c) => {
-            const iconPath = CATEGORY_ICON_PATHS[c.id];
-            return (
-              <li key={c.id}>
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+            {CATEGORIES.map((c) => (
+              <li key={c.id} className="sm:last:odd:col-span-2">
                 <button
                   type="button"
                   onClick={() => onOpenCategory(c.id)}
-                  className="group flex min-h-[52px] w-full items-center justify-between gap-4 rounded-2xl border border-[#D4AF37]/60 bg-[#00213B] px-4 py-2.5 text-left shadow-md transition-[transform,border-color,background-color,box-shadow] duration-150 ease-out hover:-translate-y-0.5 hover:border-[#D4AF37]/70 hover:shadow-md active:scale-[0.98] active:bg-[#00213B]/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D4AF37]"
+                  className="group flex min-h-[52px] w-full items-center justify-between gap-4 rounded-2xl border border-[#D4AF37]/60 bg-[#00213B] p-4 text-left shadow-md transition-[transform,border-color,background-color,box-shadow] duration-150 ease-out hover:-translate-y-0.5 hover:border-[#D4AF37]/70 hover:shadow-md active:scale-[0.98] active:bg-[#00213B]/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D4AF37]"
                 >
                   <div className="flex min-w-0 flex-1 items-center gap-4">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center">
                       <img
-                        src={iconPath}
+                        src={CATEGORY_ART[c.id]}
                         alt=""
                         aria-hidden="true"
                         onError={(e) => {
@@ -918,11 +919,15 @@ function HomeScreen({ onOpenCategory, onOpenItem }) {
                     </div>
                     <span className="flex-1 text-base font-extrabold uppercase tracking-wide text-white">{c.label}</span>
                   </div>
-                  <ChevronRight size={22} strokeWidth={2.5} aria-hidden="true" className="text-xl text-[#D4AF37] transition-transform duration-200 group-hover:translate-x-0.5" />
+                  <ChevronRight
+                    size={22}
+                    strokeWidth={2.5}
+                    aria-hidden="true"
+                    className="text-xl text-[#D4AF37] transition-transform duration-200 group-hover:translate-x-0.5"
+                  />
                 </button>
               </li>
-            );
-          })}
+            ))}
           </ul>
         </nav>
       </div>
@@ -930,6 +935,7 @@ function HomeScreen({ onOpenCategory, onOpenItem }) {
       <div className="mt-6 flex items-center justify-center gap-2 text-[13px] text-[var(--muted)]">
         <PretzelMark size={18} className="text-[var(--gold)]" />
         Sample prices in line with recent Wiesn ranges
+      </div>
       </div>
     </ScrollArea>
   );
@@ -981,7 +987,8 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
   }, [product, categoryId, sub.id, cat.kind]);
 
   const priceCeiling = Math.max(20, Math.ceil(Math.max(...rows.map((r) => r.price)) / 5) * 5);
-  const hasActivePriceFilter = categoryId !== "merch" && maxPrice !== null && maxPrice < priceCeiling;
+  // Souvenirs show no prices, so the budget never applies there
+  const budgetActive = categoryId !== "merch" && maxPrice !== null && maxPrice < priceCeiling;
 
   const visible = useMemo(() => {
     const list = rows.filter((r) => categoryId === "merch" || maxPrice === null || r.price <= maxPrice);
@@ -1002,12 +1009,13 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
   const countLabel = isVendorView
     ? `${visible.length} ${visible.length === 1 ? "vendor" : "vendors"} found`
     : `${visible.length} ${visible.length === 1 ? "product" : "products"}`;
+
   const SortIcon = product ? (sortDesc ? ArrowDown10 : ArrowDown01) : sortDesc ? ArrowDownZA : ArrowDownAZ;
   const sortLabel = product
     ? sortDesc ? "Sorted by price, highest first" : "Sorted by price, lowest first"
     : sortDesc ? "Sorted Z to A" : "Sorted A to Z";
 
-  // Keep the category switcher, filters, and sort controls together above the list.
+  // Sticky controls: back + category title, then sub-category chips with the price and sort buttons
   const pinned = (
     <div className="flex w-full flex-col gap-0 pt-2">
       <div className="mb-6 mt-6 flex w-full items-center gap-2">
@@ -1058,8 +1066,8 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
           aria-haspopup="dialog"
           aria-label={maxPrice === null ? "Set maximum price" : `Maximum price ${formatPrice(maxPrice)}. Change`}
           className={`grid h-9 w-9 shrink-0 place-items-center rounded-full transition-[background-color,color,transform] duration-150 active:scale-95 ${
-            hasActivePriceFilter
-              ? "border-2 border-[#D4AF37] bg-[#00213B] text-[#D4AF37]"
+            budgetActive || budgetOpen
+              ? "border-2 border-[#D4AF37] bg-white text-[#D4AF37] shadow-sm"
               : "bg-[var(--surface)] text-[var(--gold-ink)] hover:bg-[var(--press)]"
           }`}
         >
@@ -1090,14 +1098,15 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
             <p className="tabular mb-4 text-[13px] text-[var(--muted)]" aria-live="polite">{countLabel}</p>
           </div>
         )}
+
         <AnimatePresence initial={false}>
-          {hasActivePriceFilter && (
+          {budgetActive && (
             <motion.div
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2, ease: "easeInOut" }}
-              className="mb-1 mt-2 flex w-fit items-center gap-2 rounded-full border border-[#D4AF37]/50 bg-[#F9F8F3] px-3 py-1 text-xs text-[#00213B]/70 shadow-sm"
+              className="mb-4 mt-2 flex w-fit items-center gap-2 rounded-full border border-[#D4AF37]/50 bg-[#F9F8F3] px-3 py-1 text-xs text-[#00213B]/70 shadow-sm"
             >
               <button
                 type="button"
@@ -1119,6 +1128,7 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
             </motion.div>
           )}
         </AnimatePresence>
+
         {visible.length ? (
           <>
             <motion.ul
@@ -1159,11 +1169,7 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
                 Showing {shown.length} of {visible.length}
               </p>
               {remaining > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setLimit(shown.length + PAGE_SIZE)}
-                  className="bg-[#00213B] px-8 py-3.5 text-sm font-black uppercase tracking-wider text-[#F9F8F3] rounded-full shadow-md transition-all hover:bg-[#00182C] active:scale-95"
-                >
+                <button type="button" onClick={() => setLimit(shown.length + PAGE_SIZE)} className={NAVY_PILL}>
                   Show more
                 </button>
               )}
@@ -1203,7 +1209,7 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
   );
 }
 
-// "About Hermes" frame from the Figma
+// About page: each section is one gold-bordered card; the steps inside are plain rows with navy badges
 function AboutScreen({ onBack }) {
   const steps = [
     ["1", "Select a category"],
@@ -1214,38 +1220,39 @@ function AboutScreen({ onBack }) {
     ["5", "Select a vendor to see more information"],
   ];
   const Heading = ({ children }) => (
-    <h2 className="text-[#00213B] font-black text-xs uppercase tracking-wider mb-2 flex items-center gap-1.5">
-      <span className="text-[#D4AF37] font-extrabold">—</span>
-      {" "}
-      {children}
+    <h2 className="mb-2 flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-[#00213B]">
+      <span className="font-extrabold text-[#D4AF37]">—</span> {children}
     </h2>
   );
+  const CARD = "mb-4 rounded-2xl border border-[#D4AF37]/40 bg-[#F9F8F3] p-4 shadow-sm";
   return (
     <ScrollArea label="About Hermes">
-      <article className="mx-auto flex w-full max-w-prose flex-col space-y-3 bg-[#F9F8F3] px-5 pb-8 text-[16px] leading-relaxed">
-        <div className="flex items-center gap-2 pt-8 pb-1 mb-2">
+      <article className="mx-auto flex w-full max-w-prose flex-col px-1 pb-8 text-[16px] leading-relaxed">
+        <div className="mb-5 flex items-center gap-2 pt-14">
           <button
             type="button"
             onClick={onBack}
             aria-label="Back"
-            className="p-1 text-[#00213B] hover:opacity-80 transition-opacity"
+            className="p-1 text-[#00213B] transition-opacity hover:opacity-80"
           >
-            <ChevronLeftIcon className="w-5 h-5" />
+            <ChevronLeft className="h-5 w-5" />
           </button>
-          <h1 className="text-[#00213B] font-black text-xl uppercase tracking-wide flex items-center gap-1.5">
-            ABOUT <span className="font-serif font-bold text-xl lowercase first-letter:uppercase">Hermes</span>
+          <h1 className="flex items-center gap-1.5 text-xl font-black uppercase tracking-wide text-[#00213B]">
+            ABOUT <span className="font-serif text-xl font-bold lowercase first-letter:uppercase">Hermes</span>
           </h1>
         </div>
-        <section className="bg-[#F9F8F3] border border-[#D4AF37]/30 rounded-xl p-3.5 shadow-sm">
+        <section className={CARD}>
           <Heading>FIND PRICES</Heading>
-          <p className="mt-1 text-xs text-[#00213B]/80 leading-relaxed">Hermes helps you compare prices for drinks, food, rides, games and souvenirs at Oktoberfest.</p>
+          <p className="text-sm leading-relaxed text-[#00213B]/80">
+            Hermes helps you compare prices for drinks, food, rides, games and souvenirs at Oktoberfest.
+          </p>
         </section>
-        <section className="bg-[#F9F8F3] border border-[#D4AF37]/30 rounded-xl p-3.5 shadow-sm">
+        <section className={CARD}>
           <Heading>HOW IT WORKS</Heading>
-          <ol className="space-y-1.5">
+          <ol className="mt-3 space-y-3">
             {steps.map(([n, text]) => (
-              <li key={text} className="flex items-center gap-3 rounded-xl border border-[#D4AF37]/30 bg-white/50 px-3 py-2.5 text-sm text-[#00213B]">
-                <span className="bg-[#00213B] text-white font-bold w-6 h-6 rounded-full flex items-center justify-center text-xs flex-shrink-0">
+              <li key={text} className="flex items-center gap-3 text-sm text-[#00213B]">
+                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-[#00213B] text-xs font-bold text-white">
                   {n}
                 </span>
                 {text}
@@ -1253,18 +1260,16 @@ function AboutScreen({ onBack }) {
             ))}
           </ol>
         </section>
-        <section className="bg-[#F9F8F3] border border-[#D4AF37]/30 rounded-xl p-3.5 shadow-sm">
+        <section className={CARD}>
           <Heading>ABOUT PRICES</Heading>
-          <p className="mt-1 text-xs text-[#00213B]/80 leading-relaxed">
-            Prices are based on the data provided for the Oktoberfest. Prices may change. In this prototype they are
-            sample prices in line with recent Wiesn ranges, for example €14.50–€15.80 for a Maß of Festbier.
+          <p className="text-sm leading-relaxed text-[#00213B]/80">
+            Prices are based on the data provided for the Oktoberfest. Prices may change. In this prototype they are sample prices
+            in line with recent Wiesn ranges, for example €14.50–€15.80 for a Maß of Festbier.
           </p>
         </section>
-        <section className="bg-[#F9F8F3] border border-[#D4AF37]/30 rounded-xl p-3.5 shadow-sm">
+        <section className={CARD}>
           <Heading>DATA</Heading>
-          <p className="mt-1 text-xs text-[#00213B]/80 leading-relaxed">
-            Last updated: Sept 2026 (sample data for this prototype)
-          </p>
+          <p className="text-sm leading-relaxed text-[#00213B]/80">Last updated: Sept 2026 (sample data for this prototype)</p>
         </section>
       </article>
     </ScrollArea>
@@ -1275,7 +1280,7 @@ function AboutScreen({ onBack }) {
 /* App                                                                  */
 /* ------------------------------------------------------------------ */
 
-export default function OktoberfestVendorFinder() {
+export default function App() {
   // { screen: "home" } | { screen: "about", from } | { screen: "list", category, sub, item, focus }
   const [view, setView] = useState({ screen: "home" });
   const [maxPrice, setMaxPrice] = useState(null);
@@ -1311,10 +1316,10 @@ export default function OktoberfestVendorFinder() {
     <MotionConfig reducedMotion="user">
       <style>{THEME_CSS}</style>
       <HeaderLineContext.Provider value={setHeaderLine}>
-        {/* Full-height shell: the frosted header floats over each screen's own scroll area */}
         <div className="relative h-full overflow-hidden text-[var(--ink)]">
           <Header
             hairline={headerLine}
+            wide={view.screen === "home"}
             onHome={() => navigate({ screen: "home" }, -1)}
             onInfo={() => view.screen !== "about" && navigate({ screen: "about", from: view })}
           />
