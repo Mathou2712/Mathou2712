@@ -82,45 +82,284 @@ input[type="search"]::-webkit-search-cancel-button{-webkit-appearance:none;displ
 
 /* ------------------------------------------------------------------ */
 /* Data                                                                 */
-/* Realistic sample prices in line with recent Wiesn price ranges.      */
+/* Illustrative placeholder prices, not field-verified.                 */
 /* Replace with the official price list before a public launch.         */
 /* ------------------------------------------------------------------ */
 
-const CATEGORIES = [
-  {
-    id: "drinks", label: "Drinks", kind: "products", icon: Beer,
-    subs: [
-      { id: "all", label: "All Drinks", short: "All" },
-      { id: "alcoholic", label: "Alcoholic Drinks", short: "Alcoholic" },
-      { id: "non-alcoholic", label: "Non-Alcoholic Drinks", short: "Non-Alcoholic" },
-    ],
-  },
-  {
-    id: "foods", label: "Foods", kind: "products", icon: UtensilsCrossed,
-    subs: [
-      { id: "all", label: "All Foods", short: "All" },
-      { id: "vegetarian", label: "Vegetarian Food", short: "Vegetarian" },
-      { id: "non-vegetarian", label: "Non-Vegetarian Food", short: "Non-Vegetarian" },
-    ],
-  },
-  {
-    id: "rides", label: "Rides", kind: "places", icon: FerrisWheel,
-    subs: [
-      { id: "all", label: "All Rides", short: "All" },
-      { id: "adult", label: "Adult-Friendly Rides", short: "Adult-Friendly" },
-      { id: "family", label: "Family-Friendly Rides", short: "Family-Friendly" },
-    ],
-  },
-  {
-    id: "games", label: "Games", kind: "places", icon: Target,
-    subs: [
-      { id: "all", label: "All Games", short: "All" },
-      { id: "adult", label: "Adult-Friendly Games", short: "Adult-Friendly" },
-      { id: "family", label: "Family-Friendly Games", short: "Family-Friendly" },
-    ],
-  },
-  { id: "merch", label: "Souvenirs", kind: "places", icon: Gift, subs: [{ id: "all", label: "All Souvenirs", short: "All" }] },
+// Placeholder data model: Project_Hermes_MVP_Placeholder_Data_Model.xlsx
+// (5 categories, 6 attributes, 2 areas, 35 vendors, 50 products, 83 offerings).
+// Spreadsheet ids are kept as record ids so rows can be traced back to the workbook.
+
+// [attribute id, chip id, label]
+const ATTRIBUTES = [
+  ["A001", "alcoholic", "Alcoholic"],
+  ["A002", "non-alcoholic", "Non-Alcoholic"],
+  ["A003", "vegan", "Vegan"],
+  ["A004", "non-vegan", "Non-Vegan"],
+  ["A005", "hot", "Hot"],
+  ["A006", "cold", "Cold"],
+].map(([code, id, label]) => ({ code, id, label }));
+
+// [area id, name]
+const AREAS = Object.fromEntries(
+  [
+    ["A001", "Oktoberfest"],
+    ["A002", "Oide Wiesn"],
+  ].map(([id, name]) => [id, { id, name }])
+);
+
+// [vendor id, name, type, area id, location]
+const VENDORS = Object.fromEntries(
+  [
+    ["V001", "Augustiner-Festhalle", "Large tent", "A001", "Wirtestrasse"],
+    ["V002", "Hacker-Festzelt", "Large tent", "A001", "Wirtestrasse"],
+    ["V003", "Hofbraeu-Festzelt", "Large tent", "A001", "Wirtestrasse"],
+    ["V004", "Schottenhamel-Festhalle", "Large tent", "A001", "Wirtestrasse"],
+    ["V005", "Armbrustschuetzenzelt", "Large tent", "A001", "Wirtestrasse"],
+    ["V006", "Loewenbraeu-Festzelt", "Large tent", "A001", "Wirtestrasse"],
+    ["V007", "Kufflers Weinzelt", "Large tent", "A001", "Wirtestrasse"],
+    ["V008", "Ammer Entenbraterei", "Small tent", "A001", "Street 2"],
+    ["V009", "Cafe Kaiserschmarrn", "Small tent", "A001", "Street 3"],
+    ["V010", "Wirtshaus im Schichtl", "Small tent", "A001", "Street 4"],
+    ["V011", "Museumszelt", "Oide Wiesn tent", "A002", "Oide Wiesn"],
+    ["V012", "Festzelt Tradition", "Oide Wiesn tent", "A002", "Oide Wiesn"],
+    ["V013", "Bratwurst Stand Mueller", "Food stand", "A001", "Street 5"],
+    ["V014", "Steckerlfisch Huber", "Food stand", "A001", "Street 6"],
+    ["V015", "Brezn Baeckerei Seidl", "Food stand", "A001", "Street 1"],
+    ["V016", "Pommes & Snacks Bauer", "Food stand", "A001", "Street 7"],
+    ["V017", "Mandelbrennerei Lenz", "Food stand", "A001", "Street 8"],
+    ["V018", "Vegan Wiesn Kitchen", "Food stand", "A001", "Street 9"],
+    ["V019", "Riesenrad Willenborg", "Ride", "A001", "Schaustellerstrasse"],
+    ["V020", "Olympia Looping", "Ride", "A001", "Schaustellerstrasse"],
+    ["V021", "Teufelsrad", "Ride", "A001", "Schaustellerstrasse"],
+    ["V022", "Toboggan", "Ride", "A001", "Schaustellerstrasse"],
+    ["V023", "Jules Verne Tower", "Ride", "A001", "Schaustellerstrasse"],
+    ["V024", "Skater", "Ride", "A001", "Schaustellerstrasse"],
+    ["V025", "Autoscooter Distel", "Ride", "A001", "Schaustellerstrasse"],
+    ["V026", "Historic Chain Carousel", "Ride", "A002", "Oide Wiesn"],
+    ["V027", "Krinoline", "Ride", "A002", "Oide Wiesn"],
+    ["V028", "Schiessbude Wagner", "Game stand", "A001", "Street 10"],
+    ["V029", "Wurfspiel Schneider", "Game stand", "A001", "Street 11"],
+    ["V030", "Entenangeln Fischer", "Game stand", "A001", "Street 12"],
+    ["V031", "Hau den Lukas Bauer", "Game stand", "A002", "Oide Wiesn"],
+    ["V032", "Losbude Glueckspilz", "Game stand", "A001", "Street 13"],
+    ["V033", "Lebkuchenherz Stand Rosi", "Merchandise stand", "A001", "Street 14"],
+    ["V034", "Souvenir Stand Bavaria", "Merchandise stand", "A001", "Street 15"],
+    ["V035", "Balloon Seller Munich", "Merchandise stand", "A001", "Street 16"],
+  ].map(([id, name, type, area, location]) => [id, { id, name, type, area, location }])
+);
+
+// [offering id, vendor id, product id, price €, new this year]
+const OFFERINGS = [
+  ["O001", "V001", "P001", 14.9, false],
+  ["O002", "V001", "P020", 10.8, false],
+  ["O003", "V001", "P022", 11.9, false],
+  ["O004", "V001", "P040", 17.2, false],
+  ["O005", "V001", "P044", 4.8, false],
+  ["O006", "V002", "P001", 15.4, false],
+  ["O007", "V002", "P020", 10.8, false],
+  ["O008", "V002", "P023", 11.8, false],
+  ["O009", "V002", "P040", 18.2, false],
+  ["O010", "V002", "P042", 24.5, false],
+  ["O011", "V003", "P001", 15.5, false],
+  ["O012", "V003", "P020", 11.2, false],
+  ["O013", "V003", "P022", 12.1, false],
+  ["O014", "V003", "P040", 18.5, false],
+  ["O015", "V003", "P043", 8.9, false],
+  ["O016", "V004", "P001", 15.3, false],
+  ["O017", "V004", "P020", 10.9, false],
+  ["O018", "V004", "P040", 18, false],
+  ["O019", "V004", "P044", 4.9, false],
+  ["O020", "V005", "P001", 15.9, false],
+  ["O021", "V005", "P020", 11.5, false],
+  ["O022", "V005", "P040", 17, false],
+  ["O023", "V006", "P001", 15.6, false],
+  ["O024", "V006", "P022", 12, false],
+  ["O025", "V006", "P042", 25.5, false],
+  ["O026", "V007", "P003", 8.9, false],
+  ["O027", "V007", "P020", 15.33, false],
+  ["O028", "V007", "P045", 14.5, false],
+  ["O029", "V008", "P041", 29.9, false],
+  ["O030", "V008", "P001", 14.8, false],
+  ["O031", "V008", "P020", 9.9, false],
+  ["O032", "V009", "P045", 13.5, false],
+  ["O033", "V009", "P025", 4.5, false],
+  ["O034", "V009", "P026", 5.2, false],
+  ["O035", "V010", "P001", 14.9, false],
+  ["O036", "V010", "P020", 8.8, false],
+  ["O037", "V010", "P083", 5, false],
+  ["O038", "V011", "P001", 14.8, false],
+  ["O039", "V011", "P020", 8.5, false],
+  ["O040", "V011", "P043", 8.5, false],
+  ["O041", "V012", "P001", 14.8, false],
+  ["O042", "V012", "P044", 4.5, false],
+  ["O043", "V012", "P050", 12.9, false],
+  ["O044", "V013", "P046", 6.5, false],
+  ["O045", "V013", "P049", 5.8, false],
+  ["O046", "V013", "P021", 4.2, false],
+  ["O047", "V014", "P047", 15, false],
+  ["O048", "V014", "P048", 6.9, false],
+  ["O049", "V014", "P021", 4.5, false],
+  ["O050", "V015", "P044", 4.3, false],
+  ["O051", "V015", "P052", 5.5, false],
+  ["O052", "V016", "P049", 5.5, false],
+  ["O053", "V016", "P046", 6.9, false],
+  ["O054", "V016", "P023", 5, false],
+  ["O055", "V017", "P052", 5.8, false],
+  ["O056", "V017", "P053", 4.9, false],
+  ["O057", "V018", "P051", 7.5, true],
+  ["O058", "V018", "P049", 5.9, false],
+  ["O059", "V018", "P024", 4.8, false],
+  ["O060", "V019", "P080", 10, false],
+  ["O061", "V020", "P081", 12, false],
+  ["O062", "V021", "P082", 5, false],
+  ["O063", "V022", "P083", 6, false],
+  ["O064", "V023", "P084", 9, false],
+  ["O065", "V024", "P085", 8, false],
+  ["O066", "V025", "P086", 4.5, false],
+  ["O067", "V026", "P087", 1.5, false],
+  ["O068", "V027", "P088", 1.5, false],
+  ["O069", "V026", "P089", 1.5, false],
+  ["O070", "V028", "P100", 2, false],
+  ["O071", "V028", "P101", 15, false],
+  ["O072", "V028", "P102", 28, false],
+  ["O073", "V029", "P103", 6, false],
+  ["O074", "V029", "P107", 5, false],
+  ["O075", "V030", "P104", 5, false],
+  ["O076", "V031", "P105", 1.5, false],
+  ["O077", "V032", "P106", 2, false],
+  ["O078", "V033", "P120", 9.5, false],
+  ["O079", "V033", "P121", 14, false],
+  ["O080", "V034", "P122", 12, false],
+  ["O081", "V034", "P123", 24, false],
+  ["O082", "V034", "P125", 4.5, false],
+  ["O083", "V035", "P124", 6, false],
+].map(([id, vendorId, productId, price, isNew]) => ({ id, vendorId, productId, price, isNew }));
+
+// product id -> attribute codes
+const PRODUCT_ATTRIBUTES = {
+  P001: ["A001", "A006"],
+  P002: ["A001", "A006"],
+  P003: ["A001", "A006"],
+  P004: ["A001", "A006"],
+  P005: ["A002", "A006"],
+  P020: ["A002", "A006"],
+  P021: ["A002", "A006"],
+  P022: ["A002", "A006"],
+  P023: ["A002", "A006"],
+  P024: ["A002", "A006"],
+  P025: ["A002", "A005"],
+  P026: ["A002", "A005"],
+  P040: ["A004", "A005"],
+  P041: ["A004", "A005"],
+  P042: ["A004", "A005"],
+  P043: ["A004", "A005"],
+  P044: ["A004"],
+  P045: ["A004", "A005"],
+  P046: ["A004", "A005"],
+  P047: ["A004", "A005"],
+  P048: ["A004", "A006"],
+  P049: ["A003", "A005"],
+  P050: ["A004", "A005"],
+  P051: ["A003", "A005"],
+  P052: ["A003", "A005"],
+  P053: ["A003"],
+};
+
+// [product id, category id, name, variant, unit, traditional]
+const PRODUCT_ROWS = [
+  ["P001", "C001", "Mass Helles", "1L", "litre", true],
+  ["P002", "C001", "Mass Weissbier", "1L", "litre", true],
+  ["P003", "C001", "Weissbier", "0.5L", "litre", true],
+  ["P004", "C001", "Radler", "1L", "litre", true],
+  ["P005", "C001", "Alcohol-Free Beer", "0.5L", "litre", false],
+  ["P020", "C001", "Table Water", "1L", "litre", false],
+  ["P021", "C001", "Mineral Water", "0.5L", "litre", false],
+  ["P022", "C001", "Spezi", "1L", "litre", false],
+  ["P023", "C001", "Lemonade", "1L", "litre", false],
+  ["P024", "C001", "Apple Schorle", "0.5L", "litre", false],
+  ["P025", "C001", "Coffee", "Cup", "cup", false],
+  ["P026", "C001", "Hot Chocolate", "Cup", "cup", false],
+  ["P040", "C003", "Half Chicken", "Standard", "piece", true],
+  ["P041", "C003", "Bio Half Chicken", "With potato salad", "piece", false],
+  ["P042", "C003", "Pork Knuckle", "Standard", "portion", true],
+  ["P043", "C003", "Weisswurst", "Pair", "portion", true],
+  ["P044", "C003", "Brezn", "Large", "piece", true],
+  ["P045", "C003", "Kaiserschmarrn", "Standard", "portion", true],
+  ["P046", "C003", "Bratwurst in Semmel", "Standard", "piece", true],
+  ["P047", "C003", "Steckerlfisch", "Mackerel", "piece", true],
+  ["P048", "C003", "Fischsemmel", "Herring", "piece", true],
+  ["P049", "C003", "Pommes", "Regular", "portion", false],
+  ["P050", "C003", "Cheese Spaetzle", "Standard", "portion", true],
+  ["P051", "C003", "Vegan Sausage in Semmel", "Standard", "piece", false],
+  ["P052", "C003", "Roasted Almonds", "100g", "bag", true],
+  ["P053", "C003", "Chocolate Fruit Skewer", "Standard", "piece", true],
+  ["P080", "C004", "Ferris Wheel Ride", "Single Ride", "ticket", true],
+  ["P081", "C004", "Roller Coaster Ride", "Single Ride", "ticket", false],
+  ["P082", "C004", "Devil's Wheel Entry", "Single Entry", "ticket", true],
+  ["P083", "C004", "Toboggan Entry", "Single Entry", "ticket", true],
+  ["P084", "C004", "Tower Swing Ride", "Single Ride", "ticket", false],
+  ["P085", "C004", "Top Scan Ride", "Single Ride", "ticket", false],
+  ["P086", "C004", "Bumper Car Ride", "Single Ride", "ticket", false],
+  ["P087", "C004", "Historic Chain Carousel", "Single Ride", "ticket", true],
+  ["P088", "C004", "Krinoline Ride", "Single Ride", "ticket", true],
+  ["P089", "C004", "Children's Carousel", "Single Ride", "ticket", true],
+  ["P100", "C005", "Shooting Gallery", "1 Shot", "shot", true],
+  ["P101", "C005", "Shooting Gallery", "10 Shots", "shots", true],
+  ["P102", "C005", "Shooting Gallery", "20 Shots", "shots", true],
+  ["P103", "C005", "Ring Toss", "5 Rings", "round", true],
+  ["P104", "C005", "Duck Fishing", "1 Round", "round", true],
+  ["P105", "C005", "Strongman Hammer", "1 Try", "try", true],
+  ["P106", "C005", "Lottery Ticket", "1 Ticket", "ticket", true],
+  ["P107", "C005", "Can Knockdown", "3 Balls", "round", true],
+  ["P120", "C006", "Gingerbread Heart", "Medium", "piece", true],
+  ["P121", "C006", "Gingerbread Heart", "Large", "piece", true],
+  ["P122", "C006", "Oktoberfest Mug", "Souvenir", "piece", false],
+  ["P123", "C006", "Felt Hat", "Souvenir", "piece", false],
+  ["P124", "C006", "Balloon", "Standard", "piece", false],
+  ["P125", "C006", "Souvenir Pin", "Standard", "piece", false],
 ];
+
+// Workbook category ids mapped onto the app's category ids (which also key the artwork)
+const CATEGORY_LIST = [
+  { id: "drinks", code: "C001", label: "Drinks", icon: Beer },
+  { id: "foods", code: "C003", label: "Food", icon: UtensilsCrossed },
+  { id: "rides", code: "C004", label: "Rides", icon: FerrisWheel },
+  { id: "games", code: "C005", label: "Games", icon: Target },
+  { id: "merch", code: "C006", label: "Merchandise", icon: Gift },
+];
+const CATEGORY_BY_CODE = Object.fromEntries(CATEGORY_LIST.map((c) => [c.code, c]));
+const ATTRIBUTE_BY_CODE = Object.fromEntries(ATTRIBUTES.map((a) => [a.code, a]));
+const ATTRIBUTE_BY_ID = Object.fromEntries(ATTRIBUTES.map((a) => [a.id, a]));
+// Hot (A005) and Cold (A006) stay in the workbook mirror above but are not used by the app
+const EXCLUDED_ATTRIBUTES = new Set(["A005", "A006"]);
+
+// Every product, ride, game and souvenir is compared across the vendors that offer it, cheapest first.
+// Products with no offering have no price to compare, so they are left out of lists and search.
+const PRODUCTS = PRODUCT_ROWS.map(([id, categoryCode, name, variant, unit, traditional]) => ({
+  id,
+  category: CATEGORY_BY_CODE[categoryCode].id,
+  name: variant && variant !== "Standard" ? `${name} (${variant})` : name,
+  unit,
+  traditional,
+  attrs: (PRODUCT_ATTRIBUTES[id] ?? []).filter((code) => !EXCLUDED_ATTRIBUTES.has(code)).map((code) => ATTRIBUTE_BY_CODE[code].id),
+  prices: OFFERINGS.filter((o) => o.productId === id)
+    .map(({ vendorId, price, isNew }) => ({ vendorId, price, isNew }))
+    .sort((a, b) => a.price - b.price),
+})).filter((p) => p.prices.length > 0);
+
+// Filter chips: "All", then each attribute that at least one product in the category carries
+const CATEGORIES = CATEGORY_LIST.map((c) => ({
+  ...c,
+  subs: [
+    { id: "all", label: `All ${c.label}`, short: "All" },
+    ...ATTRIBUTES.filter((a) => PRODUCTS.some((p) => p.category === c.id && p.attrs.includes(a.id))).map((a) => ({
+      id: a.id,
+      label: `${a.label} ${c.label}`,
+      short: a.label,
+    })),
+  ],
+}));
 const CATEGORY_BY_ID = Object.fromEntries(CATEGORIES.map((c) => [c.id, c]));
 
 // Category artwork served from /public/icons
@@ -131,106 +370,6 @@ const CATEGORY_ART = {
   games: "/icons/games.png",
   merch: "/icons/souvenirs.png",
 };
-
-// The 17 festival tents compared for every drink and food — [id, name, type, location]
-const VENDORS = Object.fromEntries(
-  [
-    ["schottenhamel", "Schottenhamel-Festhalle", "Large beer tent", "Wirtsbudenstraße"],
-    ["hofbraeu", "Hofbräu-Festzelt", "Large beer tent", "Wirtsbudenstraße"],
-    ["armbrust", "Armbrustschützenzelt", "Large beer tent", "Wirtsbudenstraße"],
-    ["kuffler", "Kufflers Weinzelt", "Wine tent", "Wirtsbudenstraße"],
-    ["ochsenbraterei", "Ochsenbraterei", "Large beer tent", "Wirtsbudenstraße"],
-    ["loewenbraeu", "Löwenbräu-Festzelt", "Large beer tent", "Matthias-Pschorr-Straße"],
-    ["braeurosl", "Bräurosl", "Large beer tent", "Matthias-Pschorr-Straße"],
-    ["augustiner", "Augustiner-Festhalle", "Large beer tent", "Wirtsbudenstraße"],
-    ["paulaner", "Paulaner Festzelt Winzerer Fähndl", "Large beer tent", "Wirtsbudenstraße"],
-    ["hacker", "Hacker-Festzelt", "Large beer tent", "Wirtsbudenstraße"],
-    ["fischervroni", "Fischer-Vroni", "Large beer tent", "Wirtsbudenstraße"],
-    ["kaefer", "Käfer Wiesn-Schänke", "Small tent", "Wirtsbudenstraße"],
-    ["marstall", "Marstall", "Large beer tent", "Wirtsbudenstraße"],
-    ["schuetzen", "Schützen-Festzelt", "Large beer tent", "Below the Bavaria statue"],
-    ["schichtl", "Wirtshaus im Schichtl", "Small tent", "Wirtsbudenstraße"],
-    ["tradition", "Festzelt Tradition", "Large beer tent", "Oide Wiesn"],
-    ["herzkasperl", "Herzkasperl Festzelt", "Large beer tent", "Oide Wiesn"],
-  ].map(([id, name, type, location]) => [id, { id, name, type, location }])
-);
-const TENTS = Object.keys(VENDORS);
-
-// Deterministic 0..1 value so sample prices stay stable between renders
-function seeded(str) {
-  let h = 2166136261;
-  for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619);
-  return ((h >>> 0) % 1000) / 1000;
-}
-
-// One price per tent inside [min, max]: the cheapest tent costs `min`, the dearest `max`
-function priceList(productId, min, max) {
-  const list = TENTS.map((v) => ({
-    vendorId: v,
-    price: Math.round((min + seeded(productId + v) * (max - min)) * 10) / 10,
-  }));
-  list.sort((a, b) => a.price - b.price);
-  list[0].price = min;
-  list[list.length - 1].price = max;
-  return list;
-}
-
-// [id, name, category, sub-category, min €, max €, search aliases, quantity]
-const PRODUCTS = [
-  ["mass", "Paulaner Helles Maß (1 L)", "drinks", "alcoholic", 14.5, 15.8, ["paulaner", "helles", "mass", "festbier", "beer"], "1 L"],
-  ["augustiner-helles", "Augustiner Helles (0.5 L)", "drinks", "alcoholic", 12.9, 14.8, ["augustiner", "helles", "beer", "lager"], "0.5 L"],
-  ["weissbier", "Weißbier (0.5 L)", "drinks", "alcoholic", 11.5, 14.2, ["weissbier", "bier", "wheat beer", "white beer"], "0.5 L"],
-  ["radler", "Radler (0.5 L)", "drinks", "alcoholic", 10.8, 13.5, ["radler", "shandy", "lemonbeer", "beer"], "0.5 L"],
-  ["af-weissbier", "Alcohol-Free Weißbier (0.5 L)", "drinks", "non-alcoholic", 9.2, 11, ["beer", "weissbeer", "weißbier", "non-alcoholic"], "0.5 L"],
-  ["apfelschorle", "Apfelschorle (1 L)", "drinks", "non-alcoholic", 9.2, 11, ["apple", "spritzer", "juice", "schorle"], "1 L"],
-  ["schnaps", "Schnaps (2 cl)", "drinks", "alcoholic", 5.5, 8.5, ["shot", "obstler", "enzian"], "2 cl"],
-  ["coffee", "Coffee", "drinks", "non-alcoholic", 4.2, 5.8, ["kaffee"], "1 cup"],
-  ["hot-chocolate", "Hot Chocolate", "drinks", "non-alcoholic", 4.9, 6.5, ["kakao", "chocolate"], "1 cup"],
-
-  ["hendl", "Hendl (½ grilled chicken)", "foods", "non-vegetarian", 16.5, 21.5, ["chicken", "roast chicken", "hendl"], "1 serving"],
-  ["schweinhaxe", "Schäufele / Schweinshaxe (pork knuckle)", "foods", "non-vegetarian", 18.5, 24.5, ["pork", "knuckle", "schweinhaxe", "schäufele"], "1 serving"],
-  ["bratwurst", "Bratwurst with sauerkraut", "foods", "non-vegetarian", 10.5, 14.5, ["sausage", "wurst"], "1 serving"],
-  ["leberkaese", "Leberkäse with potato salad", "foods", "non-vegetarian", 11.9, 15.5, ["meatloaf", "leberkase"], "1 serving"],
-  ["brezn", "Brezn (giant pretzel)", "foods", "vegetarian", 6.5, 8.5, ["pretzel", "breze", "bread"], "1 pretzel"],
-  ["obatzda", "Obatzda with Brezn", "foods", "vegetarian", 12.9, 16.9, ["cheese", "spread"], "1 platter"],
-  ["kaesespaetzle", "Käsespätzle", "foods", "vegetarian", 15.5, 19.5, ["cheese", "noodles", "kasespatzle"], "1 portion"],
-  ["kaiserschmarrn", "Kaiserschmarrn", "foods", "vegetarian", 14.5, 18.9, ["dessert", "pancake", "sweet"], "1 portion"],
-  ["apfelstrudel", "Apfelstrudel with vanilla sauce", "foods", "vegetarian", 9.2, 12.5, ["apple", "dessert", "strudel"], "1 portion"],
-  ["vegan-curry", "Vegan Curry with bread", "foods", "vegetarian", 13.5, 17.5, ["vegan", "curry", "plant based"], "1 portion"],
-].map(([id, name, category, sub, min, max, aliases, quantity]) => ({
-  id, name, category, sub, aliases, quantity,
-  prices: priceList(id, min, max),
-}));
-
-// Rides, games and souvenirs are the vendors themselves — [id, name, category, sub, from €, type, location]
-const PLACES = [
-  ["riesenrad", "Riesenrad", "rides", "family", 10, "Ferris wheel", "Schaustellerstraße"],
-  ["olympia-looping", "Olympia Looping", "rides", "adult", 12, "Roller coaster", "Schaustellerstraße"],
-  ["bayern-tower", "Bayern Tower", "rides", "adult", 10, "Drop tower", "Schaustellerstraße"],
-  ["skyfall", "SkyFall", "rides", "adult", 10, "Drop tower", "Schaustellerstraße"],
-  ["chaos-pendel", "Chaos Pendel", "rides", "adult", 10, "Pendulum ride", "Schaustellerstraße"],
-  ["flip-fly", "Flip Fly", "rides", "adult", 9, "Giant swing", "Schaustellerstraße"],
-  ["hexenschaukel", "Hexenschaukel", "rides", "adult", 8, "Haunted swing", "Schaustellerstraße"],
-  ["jules-verne", "Jules Verne Tower", "rides", "family", 7, "Chain swing tower", "Schaustellerstraße"],
-  ["krinoline", "Krinoline", "rides", "family", 5, "Historic carousel", "Schaustellerstraße"],
-  ["rutschn", "Münchner Rutschn", "rides", "family", 5, "Giant slide", "Matthias-Pschorr-Straße"],
-  ["teufelsrad", "Teufelsrad", "rides", "family", 5, "Spinning disc", "Schaustellerstraße"],
-  ["toboggan", "Toboggan", "rides", "family", 6, "Tower slide", "Schaustellerstraße"],
-
-  ["schiessbude", "Schießbude", "games", "adult", 5, "Shooting gallery", "Schaustellerstraße"],
-  ["hau-den-lukas", "Hau den Lukas", "games", "adult", 3, "Strength tester", "Oide Wiesn"],
-  ["dosenwerfen", "Dosenwerfen", "games", "family", 4, "Can toss", "Schaustellerstraße"],
-  ["ringwerfen", "Ringwerfen", "games", "family", 4, "Ring toss", "Matthias-Pschorr-Straße"],
-  ["losbude", "Losbude", "games", "family", 2, "Lottery booth", "Wirtsbudenstraße"],
-  ["entenangeln", "Entenangeln", "games", "family", 3, "Duck fishing", "Oide Wiesn"],
-
-  ["lebkuchenherz", "Lebkuchenherz", "merch", "all", 5, "Gingerbread stand", "Wirtsbudenstraße"],
-  ["masskrug", "Official Wiesn Maßkrug", "merch", "all", 19.9, "Souvenir stand", "Wirtsbudenstraße"],
-  ["trachtenhut", "Trachtenhut", "merch", "all", 25, "Hat stand", "Matthias-Pschorr-Straße"],
-  ["wiesn-pin", "Official Wiesn Pin", "merch", "all", 9.9, "Souvenir stand", "Schaustellerstraße"],
-  ["wiesn-shirt", "Wiesn T-Shirt", "merch", "all", 19.9, "Souvenir stand", "Schaustellerstraße"],
-  ["pluesch-loewe", "Plush Lion", "merch", "all", 14.9, "Plush toy stand", "Oide Wiesn"],
-].map(([id, name, category, sub, from, type, location]) => ({ id, name, category, sub, from, type, location }));
 
 // Rows rendered per "Show more" step, so long lists don't overwhelm
 const PAGE_SIZE = 8;
@@ -253,17 +392,41 @@ const hasPrice = (v) => {
 };
 
 function itemsFor(categoryId, subId) {
-  const pool = CATEGORY_BY_ID[categoryId].kind === "products" ? PRODUCTS : PLACES;
-  return pool.filter((p) => p.category === categoryId && (subId === "all" || p.sub === subId));
+  return PRODUCTS.filter((p) => p.category === categoryId && (subId === "all" || p.attrs.includes(subId)));
 }
 
-// Accent-insensitive matching, so "weissbier" finds "Weißbier" and "kasespatzle" finds "Käsespätzle"
-const normalize = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+// Accent- and spelling-insensitive matching. The workbook spells German words in ASCII ("Weissbier", "Spaetzle"),
+// so ß becomes ss and ae/oe/ue fold to a/o/u on both sides: "Weißbier", "weissbier" and "Käsespätzle" all match.
+const normalize = (s) =>
+  s
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/ß/g, "ss")
+    .replace(/ae/g, "a")
+    .replace(/oe/g, "o")
+    .replace(/ue/g, "u");
 
-const SEARCH_INDEX = [
-  ...PRODUCTS.map((p) => ({ ...p, from: fromPrice(p), terms: [p.name, ...p.aliases, CATEGORY_BY_ID[p.category].label] })),
-  ...PLACES.map((p) => ({ ...p, terms: [p.name, p.type, CATEGORY_BY_ID[p.category].label] })),
-].map((e) => ({ ...e, haystack: normalize(e.terms.join(" ")) }));
+// Words each attribute adds to search. "Non-Vegan" adds none: matching is by substring,
+// so its label would make a search for "vegan" return every meat dish.
+const ATTRIBUTE_SEARCH_TERMS = {
+  alcoholic: "alcoholic",
+  "non-alcoholic": "non-alcoholic alcohol-free",
+  vegan: "vegan",
+  "non-vegan": "",
+};
+
+// Searchable text: the product name, its category, its attributes and the vendors that sell it
+const SEARCH_INDEX = PRODUCTS.map((p) => ({
+  ...p,
+  from: fromPrice(p),
+  terms: [
+    p.name,
+    CATEGORY_BY_ID[p.category].label,
+    ...p.attrs.map((id) => ATTRIBUTE_SEARCH_TERMS[id] ?? ATTRIBUTE_BY_ID[id].label),
+    ...p.prices.map((o) => VENDORS[o.vendorId].name),
+  ],
+})).map((e) => ({ ...e, haystack: normalize(e.terms.join(" ")) }));
 
 /* ------------------------------------------------------------------ */
 /* Illustrations                                                        */
@@ -858,7 +1021,7 @@ function HomeScreen({ onOpenCategory, onOpenItem }) {
                           <span className="f-display block truncate text-[18px] font-semibold leading-tight">{m.name}</span>
                           <span className="block text-[13px] text-[var(--muted)]">{CATEGORY_BY_ID[m.category].label}</span>
                         </span>
-                        {m.category !== "merch" && hasPrice(m.from) ? <PriceTicket price={m.from} label="from" /> : null}
+                        {hasPrice(m.from) ? <PriceTicket price={m.from} label="from" /> : null}
                       </button>
                     </li>
                   ))}
@@ -916,7 +1079,7 @@ function HomeScreen({ onOpenCategory, onOpenItem }) {
 
       <div className="mt-6 flex items-center justify-center gap-2 text-[13px] text-[var(--muted)]">
         <PretzelMark size={18} className="text-[var(--gold)]" />
-        Sample prices in line with recent Wiesn ranges
+        Illustrative placeholder prices, not field-verified
       </div>
     </ScrollArea>
   );
@@ -927,8 +1090,8 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
   const cat = CATEGORY_BY_ID[categoryId];
   const sub = cat.subs.find((s) => s.id === subId) ?? cat.subs[0];
   const product = itemId ? PRODUCTS.find((p) => p.id === itemId) : null;
-  // Vendor views: the tents selling one product, or a list of rides / games / souvenir stands
-  const isVendorView = Boolean(product) || cat.kind === "places";
+  // Vendor view: the vendors offering one product; otherwise the category's products
+  const isVendorView = Boolean(product);
 
   const [sortDesc, setSortDesc] = useState(false);
   const [budgetOpen, setBudgetOpen] = useState(false);
@@ -964,22 +1127,22 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
   // the tent's own price in a vendor list, the cheapest "from" price in a product list
   const rows = useMemo(() => {
     if (product) return product.prices.map((p) => ({ ...VENDORS[p.vendorId], price: p.price }));
-    return itemsFor(categoryId, sub.id).map((i) => ({ ...i, price: cat.kind === "products" ? fromPrice(i) : i.from }));
-  }, [product, categoryId, sub.id, cat.kind]);
+    return itemsFor(categoryId, sub.id).map((i) => ({ ...i, price: fromPrice(i) }));
+  }, [product, categoryId, sub.id]);
 
   const priceCeiling = Math.max(20, Math.ceil(Math.max(...rows.map((r) => r.price)) / 5) * 5);
-  // Souvenirs show no prices, so the budget never applies there
-  const budgetActive = categoryId !== "merch" && maxPrice !== null && maxPrice < priceCeiling;
+  const budgetActive = maxPrice !== null && maxPrice < priceCeiling;
 
   const visible = useMemo(() => {
-    const list = rows.filter((r) => categoryId === "merch" || maxPrice === null || r.price <= maxPrice);
+    const list = rows.filter((r) => maxPrice === null || r.price <= maxPrice);
     const byPrice = (a, b) => a.price - b.price || a.name.localeCompare(b.name);
     const byName = (a, b) => a.name.localeCompare(b.name);
     list.sort(product ? byPrice : byName);
     return sortDesc ? list.reverse() : list;
-  }, [rows, maxPrice, sortDesc, product, categoryId]);
+  }, [rows, maxPrice, sortDesc, product]);
 
-  const bestPrice = product && visible.length ? Math.min(...visible.map((r) => r.price)) : null;
+  // "Best price" only means something when there is more than one vendor to compare
+  const bestPrice = product && visible.length > 1 ? Math.min(...visible.map((r) => r.price)) : null;
 
   // Show one page at a time; a search result opened from the start screen is always on the first page shown
   const focusIndex = focus ? visible.findIndex((r) => r.id === focus) : -1;
@@ -1132,7 +1295,6 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
                       location={r.location}
                       expanded={expanded === r.id}
                       onToggle={() => setExpanded((cur) => (cur === r.id ? null : r.id))}
-                      showPrice={categoryId !== "merch"}
                     />
                   ) : (
                     <LinkRow
@@ -1140,7 +1302,6 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
                       name={r.name}
                       price={r.price}
                       onClick={() => onNavigate({ category: categoryId, sub: sub.id, item: r.id })}
-                      showPrice={categoryId !== "merch"}
                     />
                   )
                 )}
@@ -1226,7 +1387,7 @@ function AboutScreen({ onBack }) {
         <section className={CARD}>
           <Heading>FIND PRICES</Heading>
           <p className="text-sm leading-relaxed text-[#00213B]/80">
-            Hermes helps you compare prices for drinks, food, rides, games and souvenirs at Oktoberfest.
+            Hermes helps you compare prices for drinks, food, rides, games and merchandise at Oktoberfest.
           </p>
         </section>
         <section className={CARD}>
@@ -1280,10 +1441,7 @@ export default function App() {
     navigate({ screen: "list", sub: "all", item: null, focus: null, ...next }, dir);
   };
 
-  const openSearchResult = (entry) =>
-    CATEGORY_BY_ID[entry.category].kind === "products"
-      ? openList({ category: entry.category, item: entry.id })
-      : openList({ category: entry.category, focus: entry.id });
+  const openSearchResult = (entry) => openList({ category: entry.category, item: entry.id });
 
   const goBack = () => {
     if (view.screen === "about") return navigate(view.from ?? { screen: "home" }, -1);
