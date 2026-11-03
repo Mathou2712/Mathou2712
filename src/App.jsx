@@ -326,11 +326,43 @@ const CATEGORY_LIST = [
   { id: "foods", code: "C003", label: "Food", icon: UtensilsCrossed },
   { id: "rides", code: "C004", label: "Rides", icon: FerrisWheel },
   { id: "games", code: "C005", label: "Games", icon: Target },
-  { id: "merch", code: "C006", label: "Merchandise", icon: Gift },
+  // Merchandise skips the product level and shows no prices: its list is the stands, with type and location only
+  { id: "merch", code: "C006", label: "Merchandise", icon: Gift, listsVendors: true },
 ];
 const CATEGORY_BY_CODE = Object.fromEntries(CATEGORY_LIST.map((c) => [c.code, c]));
-const ATTRIBUTE_BY_CODE = Object.fromEntries(ATTRIBUTES.map((a) => [a.code, a]));
-const ATTRIBUTE_BY_ID = Object.fromEntries(ATTRIBUTES.map((a) => [a.id, a]));
+
+// Audience chips for rides and games. They are not in the workbook, so they carry app-only codes.
+const AUDIENCE_ATTRIBUTES = [
+  { code: "FAMILY", id: "family", label: "Family-Friendly" },
+  { code: "ADULT", id: "adult", label: "Adult-Friendly" },
+];
+// Rides follow the workbook's Activity_Details.family_friendly flag for their offerings;
+// games have no activity details, so they are sorted by type (carnival games vs shooting and strength tests).
+const PRODUCT_AUDIENCE = {
+  P080: "FAMILY", // Ferris Wheel Ride
+  P081: "ADULT", // Roller Coaster Ride: high thrill, min. age 8
+  P082: "FAMILY", // Devil's Wheel Entry
+  P083: "FAMILY", // Toboggan Entry
+  P084: "FAMILY", // Tower Swing Ride
+  P085: "ADULT", // Top Scan Ride: high thrill, min. age 12, min. 140 cm
+  P086: "FAMILY", // Bumper Car Ride
+  P087: "FAMILY", // Historic Chain Carousel
+  P088: "FAMILY", // Krinoline Ride
+  P089: "FAMILY", // Children's Carousel
+  P100: "ADULT", // Shooting Gallery (1 Shot)
+  P101: "ADULT", // Shooting Gallery (10 Shots)
+  P102: "ADULT", // Shooting Gallery (20 Shots)
+  P103: "FAMILY", // Ring Toss
+  P104: "FAMILY", // Duck Fishing
+  P105: "ADULT", // Strongman Hammer
+  P106: "FAMILY", // Lottery Ticket
+  P107: "FAMILY", // Can Knockdown
+};
+
+// Workbook attributes first, then the audience chips; chips appear in this order
+const APP_ATTRIBUTES = [...ATTRIBUTES, ...AUDIENCE_ATTRIBUTES];
+const ATTRIBUTE_BY_CODE = Object.fromEntries(APP_ATTRIBUTES.map((a) => [a.code, a]));
+const ATTRIBUTE_BY_ID = Object.fromEntries(APP_ATTRIBUTES.map((a) => [a.id, a]));
 // Hot (A005) and Cold (A006) stay in the workbook mirror above but are not used by the app
 const EXCLUDED_ATTRIBUTES = new Set(["A005", "A006"]);
 
@@ -342,7 +374,9 @@ const PRODUCTS = PRODUCT_ROWS.map(([id, categoryCode, name, variant, unit, tradi
   name: variant && variant !== "Standard" ? `${name} (${variant})` : name,
   unit,
   traditional,
-  attrs: (PRODUCT_ATTRIBUTES[id] ?? []).filter((code) => !EXCLUDED_ATTRIBUTES.has(code)).map((code) => ATTRIBUTE_BY_CODE[code].id),
+  attrs: [...(PRODUCT_ATTRIBUTES[id] ?? []), ...(PRODUCT_AUDIENCE[id] ? [PRODUCT_AUDIENCE[id]] : [])]
+    .filter((code) => !EXCLUDED_ATTRIBUTES.has(code))
+    .map((code) => ATTRIBUTE_BY_CODE[code].id),
   prices: OFFERINGS.filter((o) => o.productId === id)
     .map(({ vendorId, price, isNew }) => ({ vendorId, price, isNew }))
     .sort((a, b) => a.price - b.price),
@@ -353,7 +387,7 @@ const CATEGORIES = CATEGORY_LIST.map((c) => ({
   ...c,
   subs: [
     { id: "all", label: `All ${c.label}`, short: "All" },
-    ...ATTRIBUTES.filter((a) => PRODUCTS.some((p) => p.category === c.id && p.attrs.includes(a.id))).map((a) => ({
+    ...APP_ATTRIBUTES.filter((a) => PRODUCTS.some((p) => p.category === c.id && p.attrs.includes(a.id))).map((a) => ({
       id: a.id,
       label: `${a.label} ${c.label}`,
       short: a.label,
@@ -395,6 +429,12 @@ function itemsFor(categoryId, subId) {
   return PRODUCTS.filter((p) => p.category === categoryId && (subId === "all" || p.attrs.includes(subId)));
 }
 
+// The vendors selling any of a category's products, once each
+function vendorsFor(categoryId, subId) {
+  const ids = new Set(itemsFor(categoryId, subId).flatMap((p) => p.prices.map((o) => o.vendorId)));
+  return [...ids].map((id) => VENDORS[id]);
+}
+
 // Accent- and spelling-insensitive matching. The workbook spells German words in ASCII ("Weissbier", "Spaetzle"),
 // so ß becomes ss and ae/oe/ue fold to a/o/u on both sides: "Weißbier", "weissbier" and "Käsespätzle" all match.
 const normalize = (s) =>
@@ -414,6 +454,8 @@ const ATTRIBUTE_SEARCH_TERMS = {
   "non-alcoholic": "non-alcoholic alcohol-free",
   vegan: "vegan",
   "non-vegan": "",
+  family: "family-friendly",
+  adult: "adult-friendly",
 };
 
 // Searchable text: the product name, its category, its attributes and the vendors that sell it
@@ -1021,7 +1063,9 @@ function HomeScreen({ onOpenCategory, onOpenItem }) {
                           <span className="f-display block truncate text-[18px] font-semibold leading-tight">{m.name}</span>
                           <span className="block text-[13px] text-[var(--muted)]">{CATEGORY_BY_ID[m.category].label}</span>
                         </span>
-                        {hasPrice(m.from) ? <PriceTicket price={m.from} label="from" /> : null}
+                        {!CATEGORY_BY_ID[m.category].listsVendors && hasPrice(m.from) ? (
+                          <PriceTicket price={m.from} label="from" />
+                        ) : null}
                       </button>
                     </li>
                   ))}
@@ -1090,8 +1134,9 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
   const cat = CATEGORY_BY_ID[categoryId];
   const sub = cat.subs.find((s) => s.id === subId) ?? cat.subs[0];
   const product = itemId ? PRODUCTS.find((p) => p.id === itemId) : null;
-  // Vendor view: the vendors offering one product; otherwise the category's products
-  const isVendorView = Boolean(product);
+  // Vendor view: the vendors offering one product, or a category listed by vendor (merchandise);
+  // otherwise the category's products
+  const isVendorView = Boolean(product) || Boolean(cat.listsVendors);
 
   const [sortDesc, setSortDesc] = useState(false);
   const [budgetOpen, setBudgetOpen] = useState(false);
@@ -1124,22 +1169,25 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
   };
 
   // Rows for this view, each with the price the budget filter applies to:
-  // the tent's own price in a vendor list, the cheapest "from" price in a product list
+  // the tent's own price in a vendor list, the cheapest "from" price in a product list.
+  // A category listed by vendor (merchandise) shows no prices, so it has no budget filter either.
+  const priced = !cat.listsVendors || Boolean(product);
   const rows = useMemo(() => {
     if (product) return product.prices.map((p) => ({ ...VENDORS[p.vendorId], price: p.price }));
+    if (cat.listsVendors) return vendorsFor(categoryId, sub.id);
     return itemsFor(categoryId, sub.id).map((i) => ({ ...i, price: fromPrice(i) }));
   }, [product, categoryId, sub.id]);
 
-  const priceCeiling = Math.max(20, Math.ceil(Math.max(...rows.map((r) => r.price)) / 5) * 5);
-  const budgetActive = maxPrice !== null && maxPrice < priceCeiling;
+  const priceCeiling = priced ? Math.max(20, Math.ceil(Math.max(...rows.map((r) => r.price)) / 5) * 5) : 0;
+  const budgetActive = priced && maxPrice !== null && maxPrice < priceCeiling;
 
   const visible = useMemo(() => {
-    const list = rows.filter((r) => maxPrice === null || r.price <= maxPrice);
+    const list = rows.filter((r) => !priced || maxPrice === null || r.price <= maxPrice);
     const byPrice = (a, b) => a.price - b.price || a.name.localeCompare(b.name);
     const byName = (a, b) => a.name.localeCompare(b.name);
     list.sort(product ? byPrice : byName);
     return sortDesc ? list.reverse() : list;
-  }, [rows, maxPrice, sortDesc, product]);
+  }, [rows, maxPrice, sortDesc, product, priced]);
 
   // "Best price" only means something when there is more than one vendor to compare
   const bestPrice = product && visible.length > 1 ? Math.min(...visible.map((r) => r.price)) : null;
@@ -1205,19 +1253,21 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
             );
           })}
         </div>
-        <button
-          type="button"
-          onClick={() => setBudgetOpen(true)}
-          aria-haspopup="dialog"
-          aria-label={maxPrice === null ? "Set maximum price" : `Maximum price ${formatPrice(maxPrice)}. Change`}
-          className={`grid h-9 w-9 shrink-0 place-items-center rounded-full transition-[background-color,color,transform] duration-150 active:scale-95 ${
-            budgetActive || budgetOpen
-              ? "border-2 border-[#D4AF37] bg-white text-[#D4AF37] shadow-sm"
-              : "bg-[var(--surface)] text-[var(--gold-ink)] hover:bg-[var(--press)]"
-          }`}
-        >
-          <SlidersHorizontal size={16} strokeWidth={2.4} aria-hidden="true" />
-        </button>
+        {priced && (
+          <button
+            type="button"
+            onClick={() => setBudgetOpen(true)}
+            aria-haspopup="dialog"
+            aria-label={maxPrice === null ? "Set maximum price" : `Maximum price ${formatPrice(maxPrice)}. Change`}
+            className={`grid h-9 w-9 shrink-0 place-items-center rounded-full transition-[background-color,color,transform] duration-150 active:scale-95 ${
+              budgetActive || budgetOpen
+                ? "border-2 border-[#D4AF37] bg-white text-[#D4AF37] shadow-sm"
+                : "bg-[var(--surface)] text-[var(--gold-ink)] hover:bg-[var(--press)]"
+            }`}
+          >
+            <SlidersHorizontal size={16} strokeWidth={2.4} aria-hidden="true" />
+          </button>
+        )}
         <button
           type="button"
           onClick={() => {
@@ -1293,6 +1343,7 @@ function ListScreen({ view, maxPrice, setMaxPrice, onNavigate, onBack }) {
                       best={bestPrice !== null && r.price === bestPrice}
                       type={r.type}
                       location={r.location}
+                      showPrice={priced}
                       expanded={expanded === r.id}
                       onToggle={() => setExpanded((cur) => (cur === r.id ? null : r.id))}
                     />
@@ -1441,7 +1492,11 @@ export default function App() {
     navigate({ screen: "list", sub: "all", item: null, focus: null, ...next }, dir);
   };
 
-  const openSearchResult = (entry) => openList({ category: entry.category, item: entry.id });
+  // A merchandise result opens the stand list with the cheapest stand selling it open and in view
+  const openSearchResult = (entry) =>
+    CATEGORY_BY_ID[entry.category].listsVendors
+      ? openList({ category: entry.category, focus: entry.prices[0].vendorId })
+      : openList({ category: entry.category, item: entry.id });
 
   const goBack = () => {
     if (view.screen === "about") return navigate(view.from ?? { screen: "home" }, -1);
