@@ -31,6 +31,8 @@ const THEME_CSS = `
 /* One-screen app shell: the page never scrolls, only each screen's content area */
 html{box-sizing:border-box;}
 html,body,#root{height:100%;}
+/* Follow the visible viewport on mobile Safari, so the bottom of each screen stays above its toolbar */
+@supports (height:100dvh){html,body,#root{height:100dvh;}}
 html,body{overflow:hidden;}
 body{background-color:var(--bg);color:var(--ink);
   font-family:'Barlow',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased;}
@@ -517,7 +519,9 @@ function MugMark({ size = 72, className = "" }) {
 const HeaderLineContext = createContext(() => {});
 
 // Every screen shares one content width so page transitions don't shift the layout.
-const CONTAINER = "mx-auto w-full max-w-2xl px-4";
+// Side padding is 16px, or the notch inset when an iPhone is in landscape (viewport-fit=cover).
+const CONTAINER =
+  "mx-auto w-full max-w-2xl pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]";
 
 function Header({ onHome, onInfo, hairline }) {
   return (
@@ -838,6 +842,8 @@ const NAVY_PILL =
 function BudgetPopup({ open, max, value, onClose, onApply }) {
   const [draft, setDraft] = useState(value ?? max);
   const [text, setText] = useState(formatInput(value ?? max));
+  // True while a finger or mouse is on the slider: shows the floating value badge above the thumb
+  const [dragging, setDragging] = useState(false);
   const closeRef = useRef(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -853,6 +859,18 @@ function BudgetPopup({ open, max, value, onClose, onApply }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // A mouse released outside the slider never fires pointerup on it, so listen on the window while dragging
+  useEffect(() => {
+    if (!dragging) return;
+    const stop = () => setDragging(false);
+    window.addEventListener("pointerup", stop);
+    window.addEventListener("pointercancel", stop);
+    return () => {
+      window.removeEventListener("pointerup", stop);
+      window.removeEventListener("pointercancel", stop);
+    };
+  }, [dragging]);
 
   const typed = parseFloat(text.replace(",", "."));
   const outOfRange = text.trim() !== "" && (Number.isNaN(typed) || typed < 0 || typed > max);
@@ -876,8 +894,12 @@ function BudgetPopup({ open, max, value, onClose, onApply }) {
     <AnimatePresence>
       {open && (
         <motion.div
-          className="h-gutter fixed inset-0 z-40 flex items-start justify-center"
-          style={{ paddingTop: "calc(var(--hh) + 28px)" }}
+          className="h-gutter fixed inset-0 z-40 flex items-start justify-center overflow-y-auto"
+          style={{
+            paddingTop: "calc(var(--hh) + 28px)",
+            // Keeps SHOW RESULTS above the iOS home indicator and toolbar; the overlay scrolls on short screens
+            paddingBottom: "calc(1rem + env(safe-area-inset-bottom, 0px))",
+          }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -909,25 +931,61 @@ function BudgetPopup({ open, max, value, onClose, onApply }) {
               <X size={20} strokeWidth={2.5} />
             </button>
             <p className="f-eyebrow text-xs font-extrabold tracking-widest text-[#D4AF37]">Your budget</p>
-            <h2 id="budget-title" className="f-display mt-1 text-2xl font-black uppercase leading-none tracking-wide text-[#00213B]">
+            {/* The chosen price sits in the title too, so it stays readable while a thumb covers the slider */}
+            <h2
+              id="budget-title"
+              className="f-display mt-1 flex items-baseline gap-2 pr-10 text-2xl font-black uppercase leading-none tracking-wide text-[#00213B]"
+            >
               Maximum price
+              <span aria-live="polite" className="tabular text-[#B8962E]">
+                {formatPrice(draft)}
+              </span>
             </h2>
             <p id="budget-desc" className="mt-2 pr-8 text-[15px] leading-snug text-[var(--muted)]">
               Set your maximum price to see available vendors.
             </p>
 
             <label htmlFor="budget-range" className="sr-only">Maximum price slider</label>
-            <input
-              id="budget-range"
-              type="range"
-              min={0}
-              max={max}
-              step={0.1}
-              value={draft}
-              onChange={(e) => onSlide(Number(e.target.value))}
-              className="h-range mt-7"
-              style={{ "--fill": `${pct}%` }}
-            />
+            {/* 88px above the track leaves the dragging badge 8px clear of the description */}
+            <div className="relative mt-[88px]">
+              {/* Floating badge while dragging: its tip sits 44px above the thumb's centre, clear of the finger.
+                  Its centre follows the thumb, whose 28px width keeps it 14px inside each track end.
+                  Centring uses motion's x so it isn't overwritten by the animated transform. */}
+              <AnimatePresence>
+                {dragging && (
+                  <motion.div
+                    aria-hidden="true"
+                    initial={{ opacity: 0, x: "-50%", y: 6, scale: 0.9 }}
+                    animate={{ opacity: 1, x: "-50%", y: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: "-50%", y: 6, scale: 0.9 }}
+                    transition={{ duration: 0.12 }}
+                    className="pointer-events-none absolute z-10"
+                    style={{ left: `calc(${pct}% + ${14 - (pct / 100) * 28}px)`, bottom: "calc(50% + 44px)" }}
+                  >
+                    <div className="tabular whitespace-nowrap rounded-full border-2 border-[#D4AF37] bg-[#00213B] px-3 py-1 text-[15px] font-black text-white shadow-md">
+                      {formatPrice(draft)}
+                    </div>
+                    <div className="mx-auto -mt-[5px] h-2.5 w-2.5 rotate-45 border-b-2 border-r-2 border-[#D4AF37] bg-[#00213B]" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              <input
+                id="budget-range"
+                type="range"
+                min={0}
+                max={max}
+                step={0.1}
+                value={draft}
+                aria-valuetext={formatPrice(draft)}
+                onChange={(e) => onSlide(Number(e.target.value))}
+                onPointerDown={() => setDragging(true)}
+                onPointerUp={() => setDragging(false)}
+                onPointerCancel={() => setDragging(false)}
+                onBlur={() => setDragging(false)}
+                className="h-range block"
+                style={{ "--fill": `${pct}%` }}
+              />
+            </div>
 
             <div className="tabular mt-4 flex items-center justify-between gap-3 text-[15px] font-semibold text-[#00213B]/70">
               <span>€0</span>
